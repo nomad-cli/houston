@@ -11,7 +11,7 @@ In a production application, you will probably want to schedule or queue notific
 
 Another caveat is that Houston doesn't manage device tokens for you. Infrastructures can vary dramatically for these kinds of things, so being agnostic and not forcing any conventions here is more a feature than a bug, perhaps. Treat it the same way as you would an e-mail address, associating one or many for each user account.
 
-_That said, a simple web service adapter, similar to [Rack::CoreData](https://github.com/mattt/rack-core-data) may be in the cards._
+_That said, a simple web service adapter, similar to [Rack::CoreData](https://github.com/mattt/rack-core-data) is in the cards._
 
 ## Installation
 
@@ -48,6 +48,32 @@ Houston also comes with the `apn` binary, which provides a convenient way to tes
 
 ```
 $ apn push "<token>" -c /path/to/apple_push_notification.pem -m "Hello from the command line!"
+```
+
+## Enabling Push Notifications on iOS
+
+### AppDelegate.m
+
+```objective-c
+- (void)applicationDidFinishLaunching:(UIApplication *)application {
+  // ...
+
+  [[UIApplication sharedApplication] registerForRemoteNotificationTypes:(UIRemoteNotificationTypeAlert | UIRemoteNotificationTypeBadge | UIRemoteNotificationTypeSound)];
+}
+
+- (void)application:(UIApplication *)application 
+didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken 
+{
+    NSLog(@"application:didRegisterForRemoteNotificationsWithDeviceToken: %@", deviceToken);
+
+    // Register the device token with a webservice
+}
+
+- (void)application:(UIApplication *)application
+didFailToRegisterForRemoteNotificationsWithError:(NSError *)error 
+{
+    NSLog(@"Error: %@", error);
+}
 ```
 
 ## Converting Your Certificate
