@@ -26,8 +26,9 @@ module Houston
 
     def message
       json = payload.to_json
+      device_token = [@device.gsub(/[<\s>]/, '')].pack('H*')
 
-      "\0\0 #{[@device.gsub(/[<\s>]/, '')].pack('H*')}\0#{json.length.chr}#{json}"
+      [0, 0, 32, device_token, 0, json.bytes.count, json].pack('ccca*cca*')
     end
 
     def mark_as_sent!
