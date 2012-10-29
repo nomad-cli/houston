@@ -30,7 +30,7 @@ command :push do |c|
   c.option '-p', '--[no]-passphrase', 'Prompt for a certificate passphrase'
   
   c.action do |args, options|
-    say_error "One or more device tokens required" and abort if args.empty?
+    say_error "One or more push tokens required" and abort if args.empty?
 
     @environment = options.environment.downcase.to_sym rescue :development
     say_error "Invalid environment,'#{@environment}' (should be either :development or :production)" and abort unless [:development, :production].include?(@environment)
@@ -51,8 +51,12 @@ command :push do |c|
       say_error "Alert message or badge required" and abort if @alert.nil? or @alert == placeholder
     end
 
+    client = @environment == :production ? Houston::Client.production : Houston::Client.development
+    client.certificate = File.read(@certificate)
+    client.passphrase = @passphrase
+
     notifications = []
-    args.each do |token|
+    (args - client.devices).each do |token|
       notification = Houston::Notification.new(device: token)
       notification.alert = @alert
       notification.badge = @badge
@@ -60,10 +64,6 @@ command :push do |c|
 
       notifications << notification
     end
-
-    client = @environment == :production ? Houston::Client.production : Houston::Client.development
-    client.certificate = File.read(@certificate)
-    client.passphrase = @passphrase
 
     begin
       client.push(*notifications)
