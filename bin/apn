@@ -56,7 +56,7 @@ command :push do |c|
     client.passphrase = @passphrase
 
     notifications = []
-    (args - client.devices).each do |token|
+    (args - client.deactivated_devices).each do |token|
       notification = Houston::Notification.new(device: token)
       notification.alert = @alert
       notification.badge = @badge
