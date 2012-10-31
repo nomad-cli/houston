@@ -30,8 +30,11 @@ module Houston
     end
 
     def push(*notifications)
+      return if notifications.empty?
+
       Connection.open(connection_options_for_endpoint(:gateway)) do |connection, socket|
-        notifications.each do |notification|
+        notifications.flatten.each do |notification|
+          next unless notification.kind_of?(Notification)
           next if notification.sent?
 
           connection.write(notification.message)
