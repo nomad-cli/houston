@@ -9,9 +9,9 @@ Houston is a simple gem for sending Apple Push Notifications. Pass your credenti
 
 In a production application, you will probably want to schedule or queue notifications into a background job. Whether you're using [queue_classic](https://github.com/ryandotsmith/queue_classic), [resque](https://github.com/defunkt/resque), or rolling you own infrastructure, integrating Houston couldn't be simpler.
 
-Another caveat is that Houston doesn't manage device tokens for you. Infrastructures can vary dramatically for these kinds of things, so being agnostic and not forcing any conventions here is more a feature than a bug, perhaps. Treat it the same way as you would an e-mail address, associating one or many for each user account.
+Another caveat is that Houston doesn't manage device tokens for you. You can roll your own infrastructure, or use [Rack::PushNotification](https://github.com/mattt/rack-push-notification).
 
-_That said, a simple web service adapter, similar to [Rack::CoreData](https://github.com/mattt/rack-core-data) is in the cards._
+> This project is part of a series of open source libraries covering the mission-critical aspects of an iOS app's infrastructure. Be sure to check out its sister projects: [GroundControl](https://github.com/mattt/GroundControl), [SkyLab](https://github.com/mattt/SkyLab), [houston](https://github.com/mattt/houston), and [Orbiter](https://github.com/mattt/Orbiter).
 
 ## Installation
 
