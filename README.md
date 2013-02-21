@@ -17,9 +17,7 @@ Another caveat is that Houston doesn't manage device tokens for you. You can rol
 
 ## Installation
 
-```
-$ gem install houston
-```
+    $ gem install houston
 
 ## Usage
 
@@ -49,9 +47,7 @@ APN.push(notification)
 
 Houston also comes with the `apn` binary, which provides a convenient way to test notifications from the command line.
 
-```
-$ apn push "<token>" -c /path/to/apple_push_notification.pem -m "Hello from the command line!"
-```
+    $ apn push "<token>" -c /path/to/apple_push_notification.pem -m "Hello from the command line!"
 
 ## Enabling Push Notifications on iOS
 
@@ -92,9 +88,7 @@ and the apple certificate as p12 files. Here is a quick walkthrough on how to do
 
 Now covert the p12 file to a pem file:
 
-```
-$ openssl pkcs12 -in cert.p12 -out apple_push_notification.pem -nodes -clcerts
-```
+    $ openssl pkcs12 -in cert.p12 -out apple_push_notification.pem -nodes -clcerts
 
 ## Contact
 
