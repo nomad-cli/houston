@@ -13,6 +13,8 @@ Another caveat is that Houston doesn't manage device tokens for you. You can rol
 
 > This project is part of a series of open source libraries covering the mission-critical aspects of an iOS app's infrastructure. Be sure to check out its sister projects: [GroundControl](https://github.com/mattt/GroundControl), [SkyLab](https://github.com/mattt/SkyLab), [houston](https://github.com/mattt/houston), and [Orbiter](https://github.com/mattt/Orbiter).
 
+> It's also part of a series of world-class command-line utilities for iOS development, which includes [Cupertino](https://github.com/mattt/cupertino) (Apple Dev Center management), [Shenzhen](https://github.com/mattt/shenzhen) (Building & Distribution), [Venice](https://github.com/mattt/venice) (In-App Purchase Receipt Verification), and [Dubai](https://github.com/mattt/dubai) (Passbook pass generation).
+
 ## Installation
 
 ```
