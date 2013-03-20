@@ -2,7 +2,7 @@ require 'json'
 
 module Houston
   class Notification
-    attr_accessor :device, :alert, :badge, :sound, :custom_data
+    attr_accessor :device, :alert, :badge, :sound, :custom_data, :newsstand
     attr_reader :sent_at
 
     def initialize(options = {})
@@ -10,6 +10,7 @@ module Houston
       @alert = options.delete(:alert)
       @badge = options.delete(:badge)
       @sound = options.delete(:sound)
+      @newsstand = options.delete(:newsstand)
 
       @custom_data = options
     end
@@ -17,9 +18,10 @@ module Houston
     def payload
       json = {}.merge(@custom_data || {})
       json['aps'] = {}
-      json['aps']['alert'] = @alert
-      json['aps']['badge'] = @badge.to_i rescue 0
-      json['aps']['sound'] = @sound
+      json['aps']['alert'] = @alert if @alert
+      json['aps']['badge'] = @badge.to_i rescue 0 if @badge
+      json['aps']['sound'] = @sound if @sound
+      json['aps']['content-available'] = 1 if @newsstand
 
       json
     end
