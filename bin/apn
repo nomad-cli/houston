@@ -25,12 +25,13 @@ command :push do |c|
   c.option '-m', '--alert ALERT', 'Body of the alert to send in the push notification'
   c.option '-b', '--badge NUMBER', 'Badge number to set with the push notification'
   c.option '-s', '--sound SOUND', 'Sound to play with the notification'
-  c.option '-n', '--newsstand 1', 'Send Newsstand Content Available'
+  c.option '-n', '--newsstand', 'Send Newsstand Content Available'
   c.option '-e', '--environment [production|development]', 'Environment to send push notification (defaults to development)'
   c.option '-c', '--certificate CERTIFICATE', 'Path to certificate (.pem) file'
   c.option '-p', '--[no]-passphrase', 'Prompt for a certificate passphrase'
   
   c.action do |args, options|
+    options.default :newsstand => false
     say_error "One or more device tokens required" and abort if args.empty?
 
     @environment = options.environment.downcase.to_sym rescue :development
