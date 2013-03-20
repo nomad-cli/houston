@@ -18,9 +18,9 @@ module Houston
     def payload
       json = {}.merge(@custom_data || {})
       json['aps'] = {}
-      json['aps']['alert'] = @alert
-      json['aps']['badge'] = @badge.to_i rescue 0
-      json['aps']['sound'] = @sound
+      json['aps']['alert'] = @alert if @alert
+      json['aps']['badge'] = @badge.to_i rescue 0 if @badge
+      json['aps']['sound'] = @sound if @sound
       json['aps']['content_available'] = 1 if @newsstand
 
       json
