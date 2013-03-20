@@ -38,6 +38,7 @@ notification.alert = "Hello, World!"
 notification.badge = 57
 notification.sound = "sosumi.aiff"
 notification.custom_data = {foo: "bar"}
+notification.newsstand = 1
 
 # And... sent! That's all it takes.
 APN.push(notification)

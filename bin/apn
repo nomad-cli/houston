@@ -25,6 +25,7 @@ command :push do |c|
   c.option '-m', '--alert ALERT', 'Body of the alert to send in the push notification'
   c.option '-b', '--badge NUMBER', 'Badge number to set with the push notification'
   c.option '-s', '--sound SOUND', 'Sound to play with the notification'
+  c.option '-n', '--newsstand 1', 'Send Newsstand Content Available'
   c.option '-e', '--environment [production|development]', 'Environment to send push notification (defaults to development)'
   c.option '-c', '--certificate CERTIFICATE', 'Path to certificate (.pem) file'
   c.option '-p', '--[no]-passphrase', 'Prompt for a certificate passphrase'
@@ -44,8 +45,9 @@ command :push do |c|
     @alert = options.alert
     @badge = options.badge.nil? ? nil : options.badge.to_i
     @sound = options.sound
+    @newsstand = options.newsstand
 
-    unless @alert or @badge
+    unless @alert or @badge or @newsstand
       placeholder = "Enter your alert message"
       @alert = ask_editor placeholder
       say_error "Alert message or badge required" and abort if @alert.nil? or @alert == placeholder
@@ -57,6 +59,7 @@ command :push do |c|
       notification.alert = @alert
       notification.badge = @badge
       notification.sound = @sound
+      notification.newsstand = @newsstand
 
       notifications << notification
     end
