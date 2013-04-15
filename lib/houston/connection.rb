@@ -1,32 +1,51 @@
 require 'uri'
 require 'socket'
 require 'openssl'
+require 'forwardable'
 
 module Houston
   class Connection
-    class << self
-      def open(options = {})
-        return unless block_given?
+    attr_reader :ssl, :socket
 
-        [:certificate, :passphrase, :host, :port].each do |option|
-          raise ArgumentError, "Missing connection parameter: #{option}" unless option
-        end
+    extend Forwardable
+    def_delegators :@ssl, :read, :write
 
-        socket = TCPSocket.new(options[:host], options[:port])
+    def self.open(options = {})
+      return unless block_given?
 
-        context = OpenSSL::SSL::SSLContext.new
-        context.key = OpenSSL::PKey::RSA.new(options[:certificate], options[:passphrase])
-        context.cert = OpenSSL::X509::Certificate.new(options[:certificate])
+      connection = new(options)
+      connection.open
 
-        ssl = OpenSSL::SSL::SSLSocket.new(socket, context)
-        ssl.sync = true
-        ssl.connect
-  
-        yield ssl, socket
-  
-        ssl.close
-        socket.close
+      yield connection
+
+      connection.close
+    end
+
+    def initialize(options = {})
+      [:certificate, :passphrase, :host, :port].each do |option|
+        raise ArgumentError, "Missing connection parameter: #{option}" unless options.has_key?(option)
       end
+
+      @options = options
+    end
+
+    def open
+      return if @socket and @ssl
+
+      @socket = TCPSocket.new(@options[:host], @options[:port])
+
+      context = OpenSSL::SSL::SSLContext.new
+      context.key = OpenSSL::PKey::RSA.new(@options[:certificate], @options[:passphrase])
+      context.cert = OpenSSL::X509::Certificate.new(@options[:certificate])
+
+      @ssl = OpenSSL::SSL::SSLSocket.new(@socket, context)
+      @ssl.sync = true
+      @ssl.connect
+    end
+
+    def close
+      @ssl.close
+      @socket.close
     end
   end
 end

@@ -32,7 +32,7 @@ module Houston
     def push(*notifications)
       return if notifications.empty?
 
-      Connection.open(connection_options_for_endpoint(:gateway)) do |connection, socket|
+      Connection.open(connection_options_for_endpoint(:gateway)) do |connection|
         notifications.flatten.each do |notification|
           next unless notification.kind_of?(Notification)
           next if notification.sent?
@@ -46,9 +46,9 @@ module Houston
     def devices
       devices = []
 
-      Connection.open(connection_options_for_endpoint(:feedback)) do |connection, socket|
+      Connection.open(connection_options_for_endpoint(:feedback)) do |connection|
         while line = connection.read(38)
-          feedback = line.unpack('N1n1H140')            
+          feedback = line.unpack('N1n1H140')
           token = feedback[2].scan(/.{0,8}/).join(' ').strip
           devices << token if token
         end
