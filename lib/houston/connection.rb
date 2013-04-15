@@ -22,8 +22,8 @@ module Houston
     end
 
     def initialize(options = {})
-      [:certificate, :passphrase, :host, :port].each do |option|
-        raise ArgumentError, "Missing connection parameter: #{option}" unless options.has_key?(option)
+      [:certificate, :host, :port].each do |option|
+        raise ArgumentError, "Missing connection parameter: #{option}" unless options[option]
       end
 
       @options = options
