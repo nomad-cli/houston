@@ -30,7 +30,7 @@ module Houston
     end
 
     def open
-      return if @socket and @ssl
+      return if open?
 
       @socket = TCPSocket.new(@options[:host], @options[:port])
 
@@ -43,9 +43,16 @@ module Houston
       @ssl.connect
     end
 
+    def open?
+      (@socket and @ssl) != nil
+    end
+
     def close
       @ssl.close
+      @ssl = nil
+
       @socket.close
+      @socket = nil
     end
   end
 end
