@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.description = "Houston is a simple gem for sending Apple Push Notifications. Pass your credentials, construct your message, and send it."
 
   s.add_dependency "commander", "~> 4.1.2"
-  s.add_dependency "json", "~> 1.7.3"
+  s.add_dependency "multi_json"
 
   s.add_development_dependency "rspec", "~> 0.6.1"
   s.add_development_dependency "rake",  "~> 0.9.2"

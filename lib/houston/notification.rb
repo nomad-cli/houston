@@ -1,4 +1,4 @@
-require 'json'
+require 'multi_json'
 
 module Houston
   class Notification
@@ -25,7 +25,7 @@ module Houston
     end
 
     def message
-      json = payload.to_json
+      json = MultiJson.dump(payload)
       device_token = [@device.gsub(/[<\s>]/, '')].pack('H*')
 
       [0, 0, 32, device_token, 0, json.bytes.count, json].pack('ccca*cca*')
