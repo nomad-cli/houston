@@ -3,7 +3,7 @@ module Houston
   APPLE_PRODUCTION_FEEDBACK_URI = "apn://feedback.push.apple.com:2196"
 
   APPLE_DEVELOPMENT_GATEWAY_URI = "apn://gateway.sandbox.push.apple.com:2195"
-  APPLE_DEVELOPMENT_FEEDBACK_URI = "apn://feedback.push.apple.com:2196"
+  APPLE_DEVELOPMENT_FEEDBACK_URI = "apn://feedback.sandbox.push.apple.com:2196"
 
   class Client
     attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase
