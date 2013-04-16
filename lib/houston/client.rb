@@ -6,7 +6,7 @@ module Houston
   APPLE_DEVELOPMENT_FEEDBACK_URI = "apn://feedback.push.apple.com:2196"
 
   class Client
-    attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase
+    attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase, :gateway_connection, :feedback_connection
 
     def initialize
       @gateway_uri = ENV['APN_GATEWAY_URI']
@@ -32,7 +32,7 @@ module Houston
     def push(*notifications)
       return if notifications.empty?
 
-      Connection.open(connection_options_for_endpoint(:gateway)) do |connection, socket|
+      use_connection(:gateway) do |connection|
         notifications.flatten.each do |notification|
           next unless notification.kind_of?(Notification)
           next if notification.sent?
@@ -46,9 +46,9 @@ module Houston
     def devices
       devices = []
 
-      Connection.open(connection_options_for_endpoint(:feedback)) do |connection, socket|
+      use_connection(:feedback) do |connection|
         while line = connection.read(38)
-          feedback = line.unpack('N1n1H140')            
+          feedback = line.unpack('N1n1H140')
           token = feedback[2].scan(/.{0,8}/).join(' ').strip
           devices << token if token
         end
@@ -57,22 +57,34 @@ module Houston
       devices
     end
 
+    def connection_options_for_endpoint(endpoint = :gateway)
+      uri = case endpoint
+              when :gateway then URI(@gateway_uri)
+              when :feedback then URI(@feedback_uri)
+              else
+                raise ArgumentError
+            end
+
+      {
+        certificate: @certificate,
+        passphrase: @passphrase,
+        host: uri.host,
+        port: uri.port
+      }
+    end
+
     private
 
-      def connection_options_for_endpoint(endpoint = :gateway)
-        uri = case endpoint
-                when :gateway then URI(@gateway_uri)
-                when :feedback then URI(@feedback_uri)
-                else
-                  raise ArgumentError
-              end
+      def use_connection(kind)
+        return unless block_given? and kind
 
-        {
-          certificate: @certificate,
-          passphrase: @passphrase,
-          host: uri.host,
-          port: uri.port
-        }
+        connection = (send(:"#{kind}_connection") || Connection.new(connection_options_for_endpoint(kind)))
+        should_close = !connection.open?
+        connection.open unless connection.open?
+
+        yield connection
+
+        connection.close if should_close
       end
   end
 end
