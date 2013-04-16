@@ -9,7 +9,7 @@ module Houston
         return unless block_given?
 
         [:certificate, :passphrase, :host, :port].each do |option|
-          raise ArgumentError, "Missing connection parameter: #{option}" unless option
+          raise ArgumentError, "Missing connection parameter: #{option}" unless options[option]
         end
 
         socket = TCPSocket.new(options[:host], options[:port])
