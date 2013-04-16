@@ -14,7 +14,11 @@ module Houston
       def open(options = {})
         return unless block_given?
 
-        connection = new(options)
+        [:host, :port, :certificate].each do |option|
+          raise ArgumentError, "Missing connection parameter: #{option}" unless options.has_key?(option)
+        end
+
+        connection = new(options[:host], options[:port], options[:certificate], options[:passphrase])
         connection.open
 
         yield connection
@@ -23,15 +27,11 @@ module Houston
       end
     end
 
-    def initialize(options = {})
-      [:host, :port, :certificate].each do |option|
-        raise ArgumentError, "Missing connection parameter: #{option}" unless options.has_key?(option)
-      end
-
-      @host = options[:host]
-      @port = options[:port]
-      @certificate = options[:certificate]
-      @passphrase = options[:passphrase]
+    def initialize(host, port, certificate, passphrase)
+      @host = host
+      @port = port
+      @certificate = certificate
+      @passphrase = passphrase
     end
 
     def open
