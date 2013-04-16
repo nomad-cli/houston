@@ -34,11 +34,11 @@ token = "<ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b596
 notification = Houston::Notification.new(device: token)
 notification.alert = "Hello, World!"
 
-# Notifications can also change the badge count, have a custom sound, or pass along arbitrary data.
+# Notifications can also change the badge count, have a custom sound, indicate available Newsstand content, or pass along arbitrary data.
 notification.badge = 57
 notification.sound = "sosumi.aiff"
+notification.content_available = true
 notification.custom_data = {foo: "bar"}
-notification.newsstand = 1
 
 # And... sent! That's all it takes.
 APN.push(notification)
@@ -61,8 +61,8 @@ Houston also comes with the `apn` binary, which provides a convenient way to tes
   [[UIApplication sharedApplication] registerForRemoteNotificationTypes:(UIRemoteNotificationTypeAlert | UIRemoteNotificationTypeBadge | UIRemoteNotificationTypeSound)];
 }
 
-- (void)application:(UIApplication *)application 
-didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken 
+- (void)application:(UIApplication *)application
+didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
 {
     NSLog(@"application:didRegisterForRemoteNotificationsWithDeviceToken: %@", deviceToken);
 
@@ -70,7 +70,7 @@ didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
 }
 
 - (void)application:(UIApplication *)application
-didFailToRegisterForRemoteNotificationsWithError:(NSError *)error 
+didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
 {
     NSLog(@"Error: %@", error);
 }
@@ -83,8 +83,8 @@ didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
 Once you have the certificate from Apple for your application, export your key
 and the apple certificate as p12 files. Here is a quick walkthrough on how to do this:
 
-1. Click the disclosure arrow next to your certificate in Keychain Access and select the certificate and the key. 
-2. Right click and choose `Export 2 items…`. 
+1. Click the disclosure arrow next to your certificate in Keychain Access and select the certificate and the key.
+2. Right click and choose `Export 2 items…`.
 3. Choose the p12 format from the drop down and name it `cert.p12`.
 
 Now covert the p12 file to a pem file:
