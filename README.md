@@ -7,7 +7,7 @@ Houston is a simple gem for sending Apple Push Notifications. Pass your credenti
 
 In a production application, you will probably want to schedule or queue notifications into a background job. Whether you're using [queue_classic](https://github.com/ryandotsmith/queue_classic), [resque](https://github.com/defunkt/resque), or rolling you own infrastructure, integrating Houston couldn't be simpler.
 
-Another caveat is that Houston doesn't manage device tokens for you. You can roll your own infrastructure, or use [Rack::PushNotification](https://github.com/mattt/rack-push-notification).
+Another caveat is that Houston doesn't manage device tokens for you. For that, you should check out [Helios](http://helios.io)
 
 > Houston's is named for [Houston, TX](http://en.wikipedia.org/wiki/Houston), the metonymical home of [NASA's Johnson Space Center](http://en.wikipedia.org/wiki/Lyndon_B._Johnson_Space_Center), as in _Houston, We Have Liftoff!_.
 
@@ -42,6 +42,24 @@ notification.custom_data = {foo: "bar"}
 
 # And... sent! That's all it takes.
 APN.push(notification)
+```
+
+### Persistent Connections
+
+If you want to manage your own persistent connection to Apple push services, such as for background workers, here's how to do it:
+
+```ruby
+uri = URI(APPLE_DEVELOPMENT_GATEWAY_URI)
+certificate = File.read("/path/to/apple_push_notification.pem")
+passphrase = "..."
+connection = Houston::Connection.new(uri.host, uri.post, certificate, passphrase)
+connection.open
+
+notification = Houston::Notification.new(device: token)
+notification.alert = "Hello, World!"
+connection.write(notification.message)
+
+connection.close
 ```
 
 ## Command Line Tool
