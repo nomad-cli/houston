@@ -8,8 +8,8 @@ module Houston
       def open(options = {})
         return unless block_given?
 
-        [:certificate, :passphrase, :host, :port].each do |option|
-          raise ArgumentError, "Missing connection parameter: #{option}" unless options[option]
+        [:certificate, :host, :port].each do |option|
+          raise ArgumentError, "Missing connection parameter: #{option}" unless options.has_key?(option)
         end
 
         socket = TCPSocket.new(options[:host], options[:port])
@@ -21,9 +21,9 @@ module Houston
         ssl = OpenSSL::SSL::SSLSocket.new(socket, context)
         ssl.sync = true
         ssl.connect
-  
+
         yield ssl, socket
-  
+
         ssl.close
         socket.close
       end
