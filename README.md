@@ -44,6 +44,23 @@ notification.custom_data = {foo: "bar"}
 APN.push(notification)
 ```
 
+### Persistent Connections
+
+If you want to manage your own persistent connection to Apple push services, such as for background workers, here's how to do it:
+
+```ruby
+certificate = File.read("/path/to/apple_push_notification.pem")
+passphrase = "..."
+connection = Houston::Connection.new(APPLE_DEVELOPMENT_GATEWAY_URI, certificate, passphrase)
+connection.open
+
+notification = Houston::Notification.new(device: token)
+notification.alert = "Hello, World!"
+connection.write(notification.message)
+
+connection.close
+```
+
 ## Command Line Tool
 
 Houston also comes with the `apn` binary, which provides a convenient way to test notifications from the command line.
