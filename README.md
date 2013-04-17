@@ -49,10 +49,9 @@ APN.push(notification)
 If you want to manage your own persistent connection to Apple push services, such as for background workers, here's how to do it:
 
 ```ruby
-uri = URI(APPLE_DEVELOPMENT_GATEWAY_URI)
 certificate = File.read("/path/to/apple_push_notification.pem")
 passphrase = "..."
-connection = Houston::Connection.new(uri.host, uri.post, certificate, passphrase)
+connection = Houston::Connection.new(APPLE_DEVELOPMENT_GATEWAY_URI, certificate, passphrase)
 connection.open
 
 notification = Houston::Notification.new(device: token)

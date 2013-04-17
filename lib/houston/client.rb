@@ -8,6 +8,22 @@ module Houston
   class Client
     attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase
 
+    class << self
+      def development
+        client = self.new
+        client.gateway_uri = APPLE_DEVELOPMENT_GATEWAY_URI
+        client.feedback_uri = APPLE_DEVELOPMENT_FEEDBACK_URI
+        client
+      end
+
+      def production
+        client = self.new
+        client.gateway_uri = APPLE_PRODUCTION_GATEWAY_URI
+        client.feedback_uri = APPLE_PRODUCTION_FEEDBACK_URI
+        client
+      end
+    end
+
     def initialize
       @gateway_uri = ENV['APN_GATEWAY_URI']
       @feedback_uri = ENV['APN_FEEDBACK_URI']
@@ -15,24 +31,10 @@ module Houston
       @passphrase = ENV['APN_CERTIFICATE_PASSPHRASE']
     end
 
-    def self.development
-      client = self.new
-      client.gateway_uri = APPLE_DEVELOPMENT_GATEWAY_URI
-      client.feedback_uri = APPLE_DEVELOPMENT_FEEDBACK_URI
-      client
-    end
-
-    def self.production
-      client = self.new
-      client.gateway_uri = APPLE_PRODUCTION_GATEWAY_URI
-      client.feedback_uri = APPLE_PRODUCTION_FEEDBACK_URI
-      client
-    end
-
     def push(*notifications)
       return if notifications.empty?
 
-      Connection.open(connection_options_for_endpoint(:gateway)) do |connection, socket|
+      Connection.open(@gateway_uri, @certificate, @passphrase) do |connection|
         notifications.flatten.each do |notification|
           next unless notification.kind_of?(Notification)
           next if notification.sent?
@@ -46,9 +48,9 @@ module Houston
     def devices
       devices = []
 
-      Connection.open(connection_options_for_endpoint(:feedback)) do |connection, socket|
+      Connection.open(@feedback_uri, @certificate, @passphrase) do |connection|
         while line = connection.read(38)
-          feedback = line.unpack('N1n1H140')            
+          feedback = line.unpack('N1n1H140')
           token = feedback[2].scan(/.{0,8}/).join(' ').strip
           devices << token if token
         end
@@ -56,23 +58,5 @@ module Houston
 
       devices
     end
-
-    private
-
-      def connection_options_for_endpoint(endpoint = :gateway)
-        uri = case endpoint
-                when :gateway then URI(@gateway_uri)
-                when :feedback then URI(@feedback_uri)
-                else
-                  raise ArgumentError
-              end
-
-        {
-          certificate: @certificate,
-          passphrase: @passphrase,
-          host: uri.host,
-          port: uri.port
-        }
-      end
   end
 end
