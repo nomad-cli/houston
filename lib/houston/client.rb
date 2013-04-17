@@ -8,25 +8,27 @@ module Houston
   class Client
     attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase
 
+    class << self
+      def development
+        client = self.new
+        client.gateway_uri = APPLE_DEVELOPMENT_GATEWAY_URI
+        client.feedback_uri = APPLE_DEVELOPMENT_FEEDBACK_URI
+        client
+      end
+
+      def production
+        client = self.new
+        client.gateway_uri = APPLE_PRODUCTION_GATEWAY_URI
+        client.feedback_uri = APPLE_PRODUCTION_FEEDBACK_URI
+        client
+      end
+    end
+
     def initialize
       @gateway_uri = ENV['APN_GATEWAY_URI']
       @feedback_uri = ENV['APN_FEEDBACK_URI']
       @certificate = ENV['APN_CERTIFICATE']
       @passphrase = ENV['APN_CERTIFICATE_PASSPHRASE']
-    end
-
-    def self.development
-      client = self.new
-      client.gateway_uri = APPLE_DEVELOPMENT_GATEWAY_URI
-      client.feedback_uri = APPLE_DEVELOPMENT_FEEDBACK_URI
-      client
-    end
-
-    def self.production
-      client = self.new
-      client.gateway_uri = APPLE_PRODUCTION_GATEWAY_URI
-      client.feedback_uri = APPLE_PRODUCTION_FEEDBACK_URI
-      client
     end
 
     def push(*notifications)
