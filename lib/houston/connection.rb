@@ -5,20 +5,17 @@ require 'forwardable'
 
 module Houston
   class Connection
-    attr_reader :ssl, :socket, :host, :port, :certificate, :passphrase
-
     extend Forwardable
     def_delegators :@ssl, :read, :write
+    def_delegators :@uri, :scheme, :host, :port
+
+    attr_reader :ssl, :socket, :certificate, :passphrase
 
     class << self
-      def open(options = {})
+      def open(uri, certificate, passphrase)
         return unless block_given?
 
-        [:host, :port, :certificate].each do |option|
-          raise ArgumentError, "Missing connection parameter: #{option}" unless options.has_key?(option)
-        end
-
-        connection = new(options[:host], options[:port], options[:certificate], options[:passphrase])
+        connection = new(uri, certificate, passphrase)
         connection.open
 
         yield connection
@@ -27,9 +24,8 @@ module Houston
       end
     end
 
-    def initialize(host, port, certificate, passphrase)
-      @host = host
-      @port = port
+    def initialize(uri, certificate, passphrase)
+      @uri = URI(uri)
       @certificate = certificate
       @passphrase = passphrase
     end
@@ -37,7 +33,7 @@ module Houston
     def open
       return false if open?
 
-      @socket = TCPSocket.new(@host, @port)
+      @socket = TCPSocket.new(@uri.host, @uri.port)
 
       context = OpenSSL::SSL::SSLContext.new
       context.key = OpenSSL::PKey::RSA.new(@certificate, @passphrase)
