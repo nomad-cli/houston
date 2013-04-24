@@ -17,7 +17,7 @@ program :help_formatter, :compact
 default_command :help
 
 command :push do |c|
-  c.syntax = 'apn push DEVICE [...]'
+  c.syntax = 'apn push TOKEN [...]'
   c.summary = 'Sends an Apple Push Notification to specified devices'
   c.description = ''
 
@@ -72,7 +72,7 @@ command :push do |c|
     @notifications = []
     args.each do |token|
       notification = Houston::Notification.new(@data || {})
-      notification.device = token
+      notification.token = token
       notification.alert = @alert if @alert
       notification.badge = @badge if @badge
       notification.sound = @sound if @sound

@@ -2,11 +2,14 @@ require 'json'
 
 module Houston
   class Notification
-    attr_accessor :device, :alert, :badge, :sound, :content_available, :custom_data
+    attr_accessor :token, :alert, :badge, :sound, :content_available, :custom_data
     attr_reader :sent_at
 
+    alias :device :token
+    alias :device= :token=
+
     def initialize(options = {})
-      @device = options.delete(:device)
+      @token = options.delete(:token) || options.delete(:device)
       @alert = options.delete(:alert)
       @badge = options.delete(:badge)
       @sound = options.delete(:sound)
@@ -28,9 +31,9 @@ module Houston
 
     def message
       json = payload.to_json
-      device_token = [@device.gsub(/[<\s>]/, '')].pack('H*')
+      hex_token = [@token.gsub(/[<\s>]/, '')].pack('H*')
 
-      [0, 0, 32, device_token, 0, json.bytes.count, json].pack('ccca*cca*')
+      [0, 0, 32, hex_token, 0, json.bytes.count, json].pack('ccca*cca*')
     end
 
     def mark_as_sent!
