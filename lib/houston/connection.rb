@@ -40,7 +40,8 @@ module Houston
       context.cert = OpenSSL::X509::Certificate.new(@certificate)
 
       @ssl = OpenSSL::SSL::SSLSocket.new(@socket, context)
-      ssl.sync = true
+      @ssl.sync = true
+      @ssl.connect
     end
 
     def open?
