@@ -76,7 +76,7 @@ command :push do |c|
       notification.alert = @alert if @alert
       notification.badge = @badge if @badge
       notification.sound = @sound if @sound
-      notification.content_available = @newsstand if @newsstand
+      notification.content_available = @content_available if @content_available
 
       @notifications << notification
     end
