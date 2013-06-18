@@ -44,6 +44,10 @@ module Houston
       @sent_at = Time.now
     end
 
+    def mark_as_unsent!
+      @sent_at = nil
+    end
+
     def sent?
       !!@sent_at
     end
