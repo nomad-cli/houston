@@ -30,6 +30,8 @@ module Houston
       @certificate = ENV['APN_CERTIFICATE']
       @passphrase = ENV['APN_CERTIFICATE_PASSPHRASE']
       @timeout = ENV['APN_TIMEOUT'] || 0.5
+      @max_retries = ENV['APN_MAX_RETRIES'] || 3
+      @retries = 0
     end
 
     def connect(uri)
@@ -58,7 +60,16 @@ module Houston
 
           notification.id = index
 
-          connection.write(notification.message)
+          begin
+            connection.write(notification.message)
+          rescue OpenSSL::SSL::SSLError, Errno::EPIPE
+            @retries += 1
+            connection.close
+
+            raise IOError, "Could not connect to APNS after #{@max_retries} attempts" if @retries > @max_retries
+            return push(*notifications)
+          end
+
           notification.mark_as_sent!
 
           break if notifications.count == 1 || notification == notifications.last
