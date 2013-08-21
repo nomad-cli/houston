@@ -6,7 +6,7 @@ module Houston
   APPLE_DEVELOPMENT_FEEDBACK_URI = "apn://feedback.sandbox.push.apple.com:2196"
 
   class Client
-    attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase, :timeout
+    attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase, :timeout, :connection
 
     class << self
       def development
@@ -30,6 +30,19 @@ module Houston
       @certificate = ENV['APN_CERTIFICATE']
       @passphrase = ENV['APN_CERTIFICATE_PASSPHRASE']
       @timeout = ENV['APN_TIMEOUT'] || 0.5
+      @max_retries = ENV['APN_MAX_RETRIES'] || 3
+      @retries = 0
+    end
+
+    def connect(uri)
+      return unless block_given?
+
+      connection = @connection || Connection.new(uri, @certificate, @passphrase)
+      connection.open
+
+      yield connection
+
+      connection.close unless @connection
     end
 
     def push(*notifications)
@@ -38,7 +51,7 @@ module Houston
       notifications.flatten!
       error = nil
 
-      Connection.open(@gateway_uri, @certificate, @passphrase) do |connection|
+      connect(@gateway_uri) do |connection|
         ssl = connection.ssl
 
         notifications.each_with_index do |notification, index|
@@ -47,7 +60,16 @@ module Houston
 
           notification.id = index
 
-          connection.write(notification.message)
+          begin
+            connection.write(notification.message)
+          rescue OpenSSL::SSL::SSLError, Errno::EPIPE
+            @retries += 1
+            connection.close
+
+            raise IOError, "Could not connect to APNS after #{@max_retries} attempts" if @retries > @max_retries
+            return push(*notifications)
+          end
+
           notification.mark_as_sent!
 
           break if notifications.count == 1 || notification == notifications.last
@@ -80,7 +102,7 @@ module Houston
     def devices
       devices = []
 
-      Connection.open(@feedback_uri, @certificate, @passphrase) do |connection|
+      connect(@feedback_uri) do |connection|
         while line = connection.read(38)
           feedback = line.unpack('N1n1H140')
           token = feedback[2].scan(/.{0,8}/).join(' ').strip

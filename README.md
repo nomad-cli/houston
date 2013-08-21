@@ -60,6 +60,21 @@ connection.write(notification.message)
 connection.close
 ```
 
+You can also pass this persistent connection to a client for it to use:
+
+```ruby
+APN = Houston::Client.development
+APN.connection = connection
+
+# ...
+
+APN.push(notification)
+```
+
+Note: The client will open the connection if it's not open already, but it will not close the connection when it's finished. You have to do this yourself.
+
+
+
 ## Command Line Tool
 
 Houston also comes with the `apn` binary, which provides a convenient way to test notifications from the command line.
