@@ -63,7 +63,7 @@ command :push do |c|
       end
     end
 
-    unless @alert or @badge or @newsstand or @data
+    unless @alert or @badge or @content_available or @data
       placeholder = "Enter your alert message"
       @alert = ask_editor placeholder
       say_error "Payload contents required" and abort if @alert.nil? or @alert == placeholder
