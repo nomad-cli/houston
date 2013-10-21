@@ -9,27 +9,23 @@ module Houston
     attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase, :timeout
 
     class << self
-      def development
-        client = self.new
-        client.gateway_uri = APPLE_DEVELOPMENT_GATEWAY_URI
-        client.feedback_uri = APPLE_DEVELOPMENT_FEEDBACK_URI
-        client
+      def development(opts = {})
+        new opts.merge  gateway_uri:  APPLE_DEVELOPMENT_GATEWAY_URI,
+                        feedback_uri: APPLE_DEVELOPMENT_FEEDBACK_URI
       end
 
-      def production
-        client = self.new
-        client.gateway_uri = APPLE_PRODUCTION_GATEWAY_URI
-        client.feedback_uri = APPLE_PRODUCTION_FEEDBACK_URI
-        client
+      def production(opts = {})
+        new opts.merge  gateway_uri:  APPLE_PRODUCTION_GATEWAY_URI,
+                        feedback_uri: APPLE_PRODUCTION_FEEDBACK_URI
       end
     end
 
-    def initialize
-      @gateway_uri = ENV['APN_GATEWAY_URI']
-      @feedback_uri = ENV['APN_FEEDBACK_URI']
-      @certificate = ENV['APN_CERTIFICATE']
-      @passphrase = ENV['APN_CERTIFICATE_PASSPHRASE']
-      @timeout = ENV['APN_TIMEOUT'] || 0.5
+    def initialize(opts = {})
+      @gateway_uri  = opts.fetch :gateway_uri,  ENV['APN_GATEWAY_URI']
+      @feedback_uri = opts.fetch :feedback_uri, ENV['APN_FEEDBACK_URI']
+      @certificate  = opts.fetch :certificate,  ENV['APN_CERTIFICATE']
+      @passphrase   = opts.fetch :passphrase,   ENV['APN_CERTIFICATE_PASSPHRASE']
+      @timeout      = opts.fetch :timeout,      ENV['APN_TIMEOUT'] || 0.5
     end
 
     def push(*notifications)
