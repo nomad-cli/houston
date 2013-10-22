@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "houston"
+require "houston/version"
 
 Gem::Specification.new do |s|
   s.name        = "houston"
@@ -16,8 +16,9 @@ Gem::Specification.new do |s|
   s.add_dependency "commander", "~> 4.1"
   s.add_dependency "json"
 
-  s.add_development_dependency "rspec", "~> 0.6"
-  s.add_development_dependency "rake",  "~> 0.9"
+  s.add_development_dependency "rspec"
+  s.add_development_dependency "rake"
+  s.add_development_dependency "simplecov"
 
   s.files         = Dir["./**/*"].reject { |file| file =~ /\.\/(bin|log|pkg|script|spec|test|vendor)/ }
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")
