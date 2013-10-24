@@ -28,40 +28,57 @@ module Houston
       @timeout      = opts.fetch :timeout,      ENV['APN_TIMEOUT'] || 0.5
     end
 
+    def session
+      open_connection
+      yield self
+      close_connection
+    end
+
+    def open_connection
+      return if @connection && @connection.open?
+      @connection = Connection.new( @gateway_uri,
+                                    @certificate,
+                                    @passphrase )
+      @connection.open
+    end
+
+    def close_connection
+      @connection = @connection.close
+    end
+
     def push(*notifications)
       return if notifications.empty?
+      open_connection
 
       notifications.flatten!
       error = nil
 
-      Connection.open(@gateway_uri, @certificate, @passphrase) do |connection|
-        ssl = connection.ssl
+      ssl = @connection.ssl
 
-        notifications.each_with_index do |notification, index|
-          next unless notification.kind_of?(Notification)
-          next if notification.sent?
+      notifications.each_with_index do |notification, index|
+        next unless notification.kind_of?(Notification)
+        next if notification.sent?
 
-          notification.id = index
+        notification.id = index
 
-          connection.write(notification.message)
-          notification.mark_as_sent!
+        @connection.write(notification.message)
+        notification.mark_as_sent!
 
-          break if notifications.count == 1 || notification == notifications.last
+        break if notifications.count == 1 || notification == notifications.last
 
-          read_socket, write_socket = IO.select([ssl], [ssl], [ssl], nil)
-          if (read_socket && read_socket[0])
-            error = connection.read(6)
-            break
-          end
+        read_socket, write_socket = IO.select([ssl], [ssl], [ssl], nil)
+        if (read_socket && read_socket[0])
+          error = @connection.read(6)
+          break
         end
+      end
 
-        return if notifications.count == 1
+      return if notifications.count == 1
 
-        unless error
-          read_socket, write_socket = IO.select([ssl], nil, [ssl], timeout)
-          if (read_socket && read_socket[0])
-            error = connection.read(6)
-          end
+      unless error
+        read_socket, write_socket = IO.select([ssl], nil, [ssl], timeout)
+        if (read_socket && read_socket[0])
+          error = @connection.read(6)
         end
       end
 
@@ -69,19 +86,19 @@ module Houston
         command, status, index = error.unpack("cci")
         notifications.slice!(0..index)
         notifications.each(&:mark_as_unsent!)
+        close_connection
         push(*notifications)
       end
     end
 
     def devices
+      open_connection
       devices = []
 
-      Connection.open(@feedback_uri, @certificate, @passphrase) do |connection|
-        while line = connection.read(38)
-          feedback = line.unpack('N1n1H140')
-          token = feedback[2].scan(/.{0,8}/).join(' ').strip
-          devices << token if token
-        end
+      while line = @connection.read(38)
+        feedback = line.unpack('N1n1H140')
+        token = feedback[2].scan(/.{0,8}/).join(' ').strip
+        devices << token if token
       end
 
       devices
