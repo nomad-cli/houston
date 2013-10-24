@@ -36,8 +36,16 @@ module Houston
       device_token = [@token.gsub(/[<\s>]/, '')].pack('H*')
       @expiry ||= Time.now + 86400
       @id ||= 0
+      id = @id.to_s
+      priority = @content_available ? 5 : 10
 
-      [1, @id, @expiry.to_i, 0, 32, device_token, 0, json.bytes.count, json].pack('ciicca*cca*')
+      frame = ''
+      frame << [1, device_token.bytesize, device_token].pack('CnA*')
+      frame << [2, json.bytesize, json].pack('CnA*')
+      frame << [3, id.bytesize, id].pack('CnA*')
+      frame << [4, 4, @expiry].pack('CnN')
+      frame << [5, 1, priority].pack('CnC')
+      [2, frame.bytesize].pack('CN') + frame
     end
 
     def mark_as_sent!
@@ -53,3 +61,5 @@ module Houston
     end
   end
 end
+
+
