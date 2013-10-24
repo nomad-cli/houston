@@ -23,8 +23,8 @@ Another caveat is that Houston doesn't manage device tokens for you. For that, y
 ```ruby
 # Environment variables are automatically read, or can be overridden by any specified options. You can also
 # conveniently use `Houston::Client.development` or `Houston::Client.production`.
-APN = Houston::Client.development
-APN.certificate = File.read("/path/to/apple_push_notification.pem")
+APN = Houston::Client.development(certificate: File.read("/path/to/apple_push_notification.pem"))
+
 
 # An example of the token sent back when a device registers for notifications
 token = "<ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969>"
@@ -40,7 +40,9 @@ notification.content_available = true
 notification.custom_data = {foo: "bar"}
 
 # And... sent! That's all it takes.
-APN.push(notification)
+APN.session do |client|
+  client.push(notification)
+end
 ```
 
 ### Persistent Connections
@@ -48,16 +50,11 @@ APN.push(notification)
 If you want to manage your own persistent connection to Apple push services, such as for background workers, here's how to do it:
 
 ```ruby
-certificate = File.read("/path/to/apple_push_notification.pem")
-passphrase = "..."
-connection = Houston::Connection.new(APPLE_DEVELOPMENT_GATEWAY_URI, certificate, passphrase)
-connection.open
-
+client = Houston::Client.development certificate: File.read("/path/to/apple_push_notification.pem"), passphrase: "..."
 notification = Houston::Notification.new(device: token)
 notification.alert = "Hello, World!"
-connection.write(notification.message)
-
-connection.close
+client.push(notification)
+client.close_connection
 ```
 
 ## Command Line Tool
