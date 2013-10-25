@@ -2,7 +2,6 @@ require 'json'
 
 module Houston
   class Frame
-    extend Forwardable
     COMMAND = 2
 
     def initialize(token, payload, id, expiry, priority)
