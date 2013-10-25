@@ -89,6 +89,9 @@ module Houston
         close_connection
         push(*notifications)
       end
+    rescue OpenSSL::SSL::SSLError, Errno::EPIPE
+      close_connection
+      retry
     end
 
     def devices
