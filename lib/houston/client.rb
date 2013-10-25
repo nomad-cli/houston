@@ -43,7 +43,7 @@ module Houston
     end
 
     def close_connection
-      @connection = @connection.close
+      @connection = @connection.close if @connection
     end
 
     def push(*notifications)
