@@ -1,5 +1,3 @@
-require 'json'
-
 module Houston
   class Notification
     attr_accessor :token, :alert, :badge, :sound, :content_available, :custom_data, :id, :expiry
@@ -27,23 +25,14 @@ module Houston
       json['aps']['badge'] = @badge.to_i rescue 0 if @badge
       json['aps']['sound'] = @sound if @sound
       json['aps']['content-available'] = 1 if @content_available
-
       json
     end
 
     def message
-      json = payload.to_json
-      device_token = [@token.gsub(/[<\s>]/, '')].pack('H*')
       @expiry ||= Time.now + 86400
       priority = @content_available ? 5 : 10
-
-      frame = ''
-      frame << [1, device_token.bytesize, device_token].pack('CnA*')
-      frame << [2, json.bytesize, json].pack('CnA*')
-      frame << [3, 4, @id].pack('CnN')
-      frame << [4, 4, @expiry.to_i].pack('CnN')
-      frame << [5, 1, priority].pack('CnC')
-      [2, frame.bytesize].pack('CN') + frame
+      frame = Frame.new @token, payload, @id, @expiry, priority
+      frame.to_s
     end
 
     def mark_as_sent!
