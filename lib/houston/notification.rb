@@ -14,7 +14,7 @@ module Houston
       @badge = options.delete(:badge)
       @sound = options.delete(:sound)
       @expiry = options.delete(:expiry)
-      @id = options.delete(:id)
+      @id = options.delete(:id).to_i
       @content_available = options.delete(:content_available)
 
       @custom_data = options
@@ -35,15 +35,13 @@ module Houston
       json = payload.to_json
       device_token = [@token.gsub(/[<\s>]/, '')].pack('H*')
       @expiry ||= Time.now + 86400
-      @id ||= 0
-      id = @id.to_s
       priority = @content_available ? 5 : 10
 
       frame = ''
       frame << [1, device_token.bytesize, device_token].pack('CnA*')
       frame << [2, json.bytesize, json].pack('CnA*')
-      frame << [3, id.bytesize, id].pack('CnA*')
-      frame << [4, 4, @expiry].pack('CnN')
+      frame << [3, 4, @id].pack('CnN')
+      frame << [4, 4, @expiry.to_i].pack('CnN')
       frame << [5, 1, priority].pack('CnC')
       [2, frame.bytesize].pack('CN') + frame
     end

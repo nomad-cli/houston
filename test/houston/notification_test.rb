@@ -58,8 +58,8 @@ describe Houston::Notification do
   end
 
   specify '#message' do
-    n = Houston::Notification.new(id: 'aaaa', expiry: 0, token: 'device_token', alert: 'Hello iPhone', badge: 3, sound: 'awesome.caf')
-    n.message.chomp.must_equal "\x02\x00\x00\x00^\x01\x00\x06\xDE\xF2\xCE\xFD\x84\xE7\x02\x00@{\"aps\":{\"alert\":\"Hello iPhone\",\"badge\":3,\"sound\":\"awesome.caf\"}}\x03\x00\x04aaaa\x04\x00\x04\x00\x00\x00\x00\x05\x00\x01".force_encoding(Encoding::ASCII_8BIT)
+    n = Houston::Notification.new(id: 22, expiry: 0, token: 'device_token', alert: 'Hello iPhone', badge: 3, sound: 'awesome.caf')
+    n.message.chomp.must_equal "\x02\x00\x00\x00^\x01\x00\x06\xDE\xF2\xCE\xFD\x84\xE7\x02\x00@{\"aps\":{\"alert\":\"Hello iPhone\",\"badge\":3,\"sound\":\"awesome.caf\"}}\x03\x00\x04\x00\x00\x00\x16\x04\x00\x04\x00\x00\x00\x00\x05\x00\x01".force_encoding(Encoding::ASCII_8BIT)
   end
 
 end
