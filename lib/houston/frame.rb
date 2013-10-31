@@ -1,13 +1,16 @@
 require 'json'
 
 module Houston
+
+  PayloadSizeException = Class.new(StandardError)
+
   class Frame
     COMMAND = 2
 
     def initialize(token, payload, id, expiry, priority)
       @items = []
       @items.push FrameItem.device_token(token)
-      @items.push FrameItem.payload(payload)
+      @items.push FrameItem.payload!(payload)
       @items.push FrameItem.identifier(id)
       @items.push FrameItem.expiry(expiry)
       @items.push FrameItem.priority(priority)
@@ -33,14 +36,20 @@ module Houston
     EXPIRATION_NO   = 4
     PRIORITY_NO     = 5
 
+    MAX_PAYLOAD_SIZE = 256
+
     def self.device_token(token)
       hex = [token.gsub(/[<\s>]/, '')].pack('H*')
       new DEVICE_TOKEN_NO, hex.bytesize, hex
     end
 
+    def self.payload!(payload)
+      payload(payload) || raise(PayloadSizeException)
+    end
+
     def self.payload(payload)
       json = payload.to_json
-      new PAYLOAD_NO, json.bytesize, json
+      new PAYLOAD_NO, json.bytesize, json if json.bytesize <= MAX_PAYLOAD_SIZE
     end
 
     def self.identifier(id)

@@ -46,6 +46,16 @@ module Houston
     def sent?
       !!@sent_at
     end
+
+    def truncate
+      until FrameItem.payload(payload) do
+        if @alert.is_a? Hash
+          @alert[:body].chop!
+        else 
+          @alert.chop!
+        end
+      end
+    end
   end
 end
 

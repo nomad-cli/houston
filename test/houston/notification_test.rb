@@ -57,9 +57,30 @@ describe Houston::Notification do
     end
   end
 
-  specify '#message' do
-    n = Houston::Notification.new(id: 22, expiry: 0, token: 'device_token', alert: 'Hello iPhone', badge: 3, sound: 'awesome.caf')
-    n.message.chomp.must_equal "\x02\x00\x00\x00^\x01\x00\x06\xDE\xF2\xCE\xFD\x84\xE7\x02\x00@{\"aps\":{\"alert\":\"Hello iPhone\",\"badge\":3,\"sound\":\"awesome.caf\"}}\x03\x00\x04\x00\x00\x00\x16\x04\x00\x04\x00\x00\x00\x00\x05\x00\x01".force_encoding(Encoding::ASCII_8BIT)
+  describe '#message' do
+    specify 'normal message' do
+      n = Houston::Notification.new(id: 22, expiry: 0, token: 'device_token', alert: 'Hello iPhone', badge: 3, sound: 'awesome.caf')
+      n.message.chomp.must_equal "\x02\x00\x00\x00^\x01\x00\x06\xDE\xF2\xCE\xFD\x84\xE7\x02\x00@{\"aps\":{\"alert\":\"Hello iPhone\",\"badge\":3,\"sound\":\"awesome.caf\"}}\x03\x00\x04\x00\x00\x00\x16\x04\x00\x04\x00\x00\x00\x00\x05\x00\x01".force_encoding(Encoding::ASCII_8BIT)
+    end
+
+    specify 'alert that is too long should raise exception' do
+      n = Houston::Notification.new(id: 22, expiry: 0, token: 'device_token', alert: 'Hello iPhone, this is a very long alert message which should end up raising an exception so please test if that is the case.'+'a'*500, badge: 3, sound: 'awesome.caf')
+      -> {n.message}.must_raise(Houston::PayloadSizeException)
+    end
+  end
+
+  describe '#truncate' do
+    specify 'truncate an alert that is not a dictionary' do
+      n = Houston::Notification.new(id: 22, expiry: 0, token: 'device_token', alert: 'A'*500, badge: 3, sound: 'awesome.caf')
+      n.truncate
+      n.alert.must_equal('A'*204)
+    end
+
+    specify 'truncate an alert that is a dictionary with a body' do
+      n = Houston::Notification.new(id: 22, expiry: 0, token: 'device_token', alert: { body: 'A'*500, 'loc-args' => [ "Jenna", "Frank" ] }, badge: 3, sound: 'awesome.caf')
+      n.truncate
+      n.alert.must_equal({ body: 'A'*166, 'loc-args' => [ "Jenna", "Frank" ] })
+    end
   end
 
 end
