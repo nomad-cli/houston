@@ -85,10 +85,12 @@ command :push do |c|
     client.certificate = File.read(@certificate)
     client.passphrase = @passphrase
 
-    begin
-      client.push(*@notifications)
-    rescue => message
-      say_error "Exception sending notification: #{message}" and abort
+    client.session do |session|
+      begin
+        session.push(*@notifications)
+      rescue => message
+        say_error "Exception sending notification: #{message}" and abort
+      end
     end
 
     say_ok "Push notifications successfully sent"
