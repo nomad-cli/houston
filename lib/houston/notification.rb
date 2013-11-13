@@ -33,12 +33,12 @@ module Houston
     end
 
     def message
-      frame_data = [device_token_item,
-                    payload_item,
-                    identifier_item,
-                    expiration_item,
-                    priority_item].compact.join
-      [2, frame_data.bytes.count, frame_data].pack('cNa*')
+      data = [device_token_item,
+              payload_item,
+              identifier_item,
+              expiration_item,
+              priority_item].compact.join
+      [2, data.bytes.count, data].pack('cNa*')
     end
 
     def mark_as_sent!
@@ -54,6 +54,7 @@ module Houston
     end
 
     private
+    
     def device_token_item
       [1, 32, @token.gsub(/[<\s>]/, '')].pack('cnH*')
     end
