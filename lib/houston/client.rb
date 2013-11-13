@@ -44,6 +44,7 @@ module Houston
         notifications.each_with_index do |notification, index|
           next unless notification.kind_of?(Notification)
           next if notification.sent?
+          next unless notification.valid?
 
           notification.id = index
 

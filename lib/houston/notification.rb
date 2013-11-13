@@ -2,6 +2,8 @@ require 'json'
 
 module Houston
   class Notification
+    MAXIMUM_PAYLOAD_SIZE = 256
+
     attr_accessor :token, :alert, :badge, :sound, :content_available, :custom_data, :id, :expiry
     attr_reader :sent_at
 
@@ -50,6 +52,10 @@ module Houston
 
     def sent?
       !!@sent_at
+    end
+
+    def valid?
+      payload.to_json.bytesize <= MAXIMUM_PAYLOAD_SIZE
     end
   end
 end
