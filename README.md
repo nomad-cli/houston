@@ -60,6 +60,10 @@ connection.write(notification.message)
 connection.close
 ```
 
+## Versioning
+
+Houston 2.0 supports the new [enhanced notification format](https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/CommunicatingWIthAPS.html#//apple_ref/doc/uid/TP40008194-CH101-SW4). Support for the legacy notification format is available in 1.x releases.
+
 ## Command Line Tool
 
 Houston also comes with the `apn` binary, which provides a convenient way to test notifications from the command line.
