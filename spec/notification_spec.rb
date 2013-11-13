@@ -111,7 +111,6 @@ describe Houston::Notification do
   end
 
   describe '#message' do
-
     it 'should create a message with command 2' do
       command, _1, _2 = subject.message.unpack('cNa*')
       command.should == 2
@@ -196,6 +195,5 @@ describe Houston::Notification do
       items.should have(4).items
       items.find { |item| item[0] == 5 }.should be_nil
     end
-
   end
 end
