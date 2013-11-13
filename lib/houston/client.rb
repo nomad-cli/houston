@@ -71,7 +71,9 @@ module Houston
       end
 
       if error
-        command, status, index = error.unpack("cci")
+        command, status, index = error.unpack("ccN")
+        # status == 10 means shutdown, and the given id is the last one successfully sent
+        index += 1 if status == 10
         notifications.slice!(0..index)
         notifications.each(&:mark_as_unsent!)
         push(*notifications)

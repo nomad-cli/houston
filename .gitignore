@@ -1,3 +1,4 @@
 *.pem
 *.cer
 Gemfile.lock
+coverage/
