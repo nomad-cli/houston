@@ -60,6 +60,28 @@ connection.write(notification.message)
 connection.close
 ```
 
+### Expiring Devices
+
+It is important to not send expired devices tokens to apple. They will reject your request.
+
+```
+apn = Houston::Client.production
+push_path = File.join(Rails.root, "config", "apple_push_notification.pem")
+apn.certificate = File.read(push_path)
+expired_devices = apn.devices
+
+# I save my devices with <> or ' '
+cleaned_tokens = expired_devices.map{|d| d.gsub(/[^a-z0-9]/,'') }
+
+devices = Device.where(token: cleaned_tokens).all
+
+devices.each do |d|
+  d.feedback_at = DateTime.now
+  d.save
+end
+
+```
+
 ## Versioning
 
 Houston 2.0 supports the new [enhanced notification format](https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/CommunicatingWIthAPS.html#//apple_ref/doc/uid/TP40008194-CH101-SW4). Support for the legacy notification format is available in 1.x releases.
