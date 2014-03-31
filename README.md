@@ -62,6 +62,14 @@ connection.write(notification.message)
 connection.close
 ```
 
+### Feedback Service
+
+Apple provides a feedback service to query for unregistered device tokens, these are devices that have failed to receive a push notification and should be removed from your application. You should periodically query for and remove these devices, Apple audits providers to ensure they are removing unregistered devices. To obtain the list of unregistered device tokens:
+
+```ruby
+Houston::Client.development.devices
+```
+
 ## Versioning
 
 Houston 2.0 supports the new [enhanced notification format](https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/CommunicatingWIthAPS.html#//apple_ref/doc/uid/TP40008194-CH101-SW4). Support for the legacy notification format is available in 1.x releases.
