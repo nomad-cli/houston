@@ -47,7 +47,7 @@ command :push do |c|
     @alert = options.alert
     @badge = options.badge.nil? ? nil : options.badge.to_i
     @sound = options.sound
-    @content_available = options.newsstand
+    @content_available = !!options.newsstand
 
     if options.payload
       begin
@@ -87,10 +87,26 @@ command :push do |c|
 
     begin
       client.push(*@notifications)
+
+      sent = @notifications.select{|notification| notification.sent?}
+      unsent = @notifications.select{|notification| not notification.sent?}
+
+      case sent.length
+      when 1
+        say_ok "#{sent.length} push notification sent successfully"
+      else
+        say_ok "#{sent.length} push notifications sent successfully"
+      end
+
+      case unsent.length
+      when 1
+        say_ok "#{sent.length} push notification unsuccessful (#{unsent.join(", ")})"
+      else
+        say_ok "#{sent.length} push notifications unsuccessful (#{unsent.join(", ")})"
+      end
+
     rescue => message
       say_error "Exception sending notification: #{message}" and abort
     end
-
-    say_ok "Push notifications successfully sent"
   end
 end
