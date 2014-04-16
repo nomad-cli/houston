@@ -75,7 +75,7 @@ module Houston
     end
 
     def expiration_item
-      [4, 4, @expiry].pack('cnN') unless @expiry.nil?
+      [4, 4, @expiry.to_i].pack('cnN') unless @expiry.nil?
     end
 
     def priority_item
