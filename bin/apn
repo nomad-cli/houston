@@ -100,9 +100,9 @@ command :push do |c|
 
       case unsent.length
       when 1
-        say_ok "#{sent.length} push notification unsuccessful (#{unsent.join(", ")})"
+        say_ok "#{unsent.length} push notification unsuccessful (#{unsent.join(", ")})"
       else
-        say_ok "#{sent.length} push notifications unsuccessful (#{unsent.join(", ")})"
+        say_ok "#{unsent.length} push notifications unsuccessful (#{unsent.join(", ")})"
       end
 
     rescue => message
