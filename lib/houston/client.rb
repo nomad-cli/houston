@@ -78,18 +78,25 @@ module Houston
       end
     end
 
-    def devices
-      devices = []
+    def unregistered_devices
+      unregistered_devices_with_timestamps.map {|unregistered_device| unregistered_device[:token]}
+    end
+
+    alias :devices :unregistered_devices
+
+    def unregistered_devices_with_timestamps
+      unregistered_devices_with_timestamps = []
 
       Connection.open(@feedback_uri, @certificate, @passphrase) do |connection|
         while line = connection.read(38)
           feedback = line.unpack('N1n1H140')
+          timestamp = feedback[0]
           token = feedback[2].scan(/.{0,8}/).join(' ').strip
-          devices << token if token
+          unregistered_devices_with_timestamps << {token: token, timestamp: timestamp} if token && timestamp
         end
       end
 
-      devices
+      unregistered_devices_with_timestamps
     end
   end
 end
