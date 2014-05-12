@@ -81,28 +81,33 @@ command :push do |c|
       @notifications << notification
     end
 
-    client = @environment == :production ? Houston::Client.production : Houston::Client.development
+    client = (@environment == :production) ? Houston::Client.production : Houston::Client.development
     client.certificate = File.read(@certificate)
     client.passphrase = @passphrase
 
     begin
       client.push(*@notifications)
 
-      sent = @notifications.select{|notification| notification.sent?}
-      unsent = @notifications.select{|notification| not notification.sent?}
+      sent, unsent = @notifications.partition{|notification| notification.sent?}
 
-      case sent.length
-      when 1
-        say_ok "#{sent.length} push notification sent successfully"
-      else
-        say_ok "#{sent.length} push notifications sent successfully"
+      if sent.any?
+        case sent.length
+        when 1
+          say_ok "1 push notification sent successfully"
+        else
+          say_ok "#{sent.length} push notifications sent successfully"
+        end
       end
 
-      case unsent.length
-      when 1
-        say_ok "#{unsent.length} push notification unsuccessful (#{unsent.join(", ")})"
-      else
-        say_ok "#{unsent.length} push notifications unsuccessful (#{unsent.join(", ")})"
+      if unsent.any?
+        tokens = unsent.map{|notification| "\n - #{notification.token}"}.join
+
+        case unsent.length
+        when 1
+          say_error "1 push notification unsuccessful (#{tokens})"
+        else
+          say_error "#{unsent.length} push notifications unsuccessful (#{tokens})"
+        end
       end
 
     rescue => message
