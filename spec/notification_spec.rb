@@ -19,15 +19,50 @@ describe Houston::Notification do
 
   subject { Houston::Notification.new(notification_options) }
 
-  its(:token) { should == '<ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969>' }
-  its(:alert) { should == 'Houston, we have a problem.' }
-  its(:badge) { should == 2701 }
-  its(:sound) { should == 'sosumi.aiff' }
-  its(:expiry) { should == 1234567890 }
-  its(:id) { should == 42 }
-  its(:priority) { should == 10 }
-  its(:content_available) { should be_true }
-  its(:custom_data) { should == { key1: 1, key2: 'abc' } }
+  describe '#token' do
+    subject { super().token }
+    it { should == '<ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969>' }
+  end
+
+  describe '#alert' do
+    subject { super().alert }
+    it { should == 'Houston, we have a problem.' }
+  end
+
+  describe '#badge' do
+    subject { super().badge }
+    it { should == 2701 }
+  end
+
+  describe '#sound' do
+    subject { super().sound }
+    it { should == 'sosumi.aiff' }
+  end
+
+  describe '#expiry' do
+    subject { super().expiry }
+    it { should == 1234567890 }
+  end
+
+  describe '#id' do
+    subject { super().id }
+    it { should == 42 }
+  end
+
+  describe '#priority' do
+    subject { super().priority }
+    it { should == 10 }
+  end
+
+  describe '#content_available' do
+    subject { super().content_available }
+    it { should be_true }
+  end
+
+  describe '#custom_data' do
+    subject { super().custom_data }
+    it { should == { key1: 1, key2: 'abc' } }
+  end
 
   context 'using :device instead of :token' do
     subject do
@@ -36,12 +71,15 @@ describe Houston::Notification do
       Houston::Notification.new(notification_options)
     end
 
-    its(:device) { '<ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969>' }
+    describe '#device' do
+      subject { super().device }
+      it { '<ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969>' }
+    end
   end
 
   describe '#payload' do
     it 'should create a compliant dictionary' do
-      subject.payload.should == {
+      expect(subject.payload).to eq({
         'aps' => {
           'alert' => 'Houston, we have a problem.',
           'badge' => 2701,
@@ -50,75 +88,75 @@ describe Houston::Notification do
         },
         :key1 => 1,
         :key2 => 'abc'
-      }
+      })
     end
 
     it 'should create a dictionary of only custom data and empty aps' do
-      Houston::Notification.new(key1: 123, key2: 'xyz').payload.should == {
+      expect(Houston::Notification.new(key1: 123, key2: 'xyz').payload).to eq({
         'aps' => {},
         :key1 => 123,
         :key2 => 'xyz'
-      }
+      })
     end
 
     it 'should create a dictionary only with alerts' do
-      Houston::Notification.new(alert: 'Hello, World!').payload.should == {
+      expect(Houston::Notification.new(alert: 'Hello, World!').payload).to eq({
         'aps' => { 'alert' => 'Hello, World!' }
-      }
+      })
     end
 
     it 'should create a dictionary only with badges' do
-      Houston::Notification.new(badge: '123').payload.should == {
+      expect(Houston::Notification.new(badge: '123').payload).to eq({
         'aps' => { 'badge' => 123 }
-      }
+      })
     end
 
     it 'should create a dictionary only with sound' do
-      Houston::Notification.new(sound: 'ring.aiff').payload.should == {
+      expect(Houston::Notification.new(sound: 'ring.aiff').payload).to eq({
         'aps' => { 'sound' => 'ring.aiff' }
-      }
+      })
     end
 
     it 'should create a dictionary only with content-available' do
-      Houston::Notification.new(content_available: true).payload.should == {
+      expect(Houston::Notification.new(content_available: true).payload).to eq({
         'aps' => { 'content-available' => 1 }
-      }
+      })
     end
 
     it 'should allow custom data inside aps key' do
       notification_options = { :badge => 567, 'aps' => { 'loc-key' => 'my-key' } }
-      Houston::Notification.new(notification_options).payload.should == {
+      expect(Houston::Notification.new(notification_options).payload).to eq({
         'aps' => { 'loc-key' => 'my-key', 'badge' => 567 }
-      }
+      })
     end
   end
 
   describe '#sent?' do
     it 'should be false initially' do
-      subject.sent?.should be_false
+      expect(subject.sent?).to be_false
     end
 
     it 'should be true after marking as sent' do
       subject.mark_as_sent!
-      subject.sent?.should be_true
+      expect(subject.sent?).to be_true
     end
 
     it 'should be false after marking as unsent' do
       subject.mark_as_sent!
       subject.mark_as_unsent!
-      subject.sent?.should be_false
+      expect(subject.sent?).to be_false
     end
   end
 
   describe '#message' do
     it 'should create a message with command 2' do
       command, _1, _2 = subject.message.unpack('cNa*')
-      command.should == 2
+      expect(command).to eq(2)
     end
 
     it 'should create a message with correct frame length' do
       _1, length, _2 = subject.message.unpack('cNa*')
-      length.should == 182
+      expect(length).to eq(182)
     end
 
     def parse_items(items_stream)
@@ -133,37 +171,37 @@ describe Houston::Notification do
 
     it 'should include five items' do
       _1, _2, items_stream = subject.message.unpack('cNa*')
-      parse_items(items_stream).should have(5).items
+      expect(parse_items(items_stream).size).to eq(5)
     end
 
     it 'should include an item #1 with the token as hexadecimal' do
       _1, _2, items_stream = subject.message.unpack('cNa*')
       items = parse_items(items_stream)
-      items.should include([1, 32, ['ce8be6272e43e85516033e24b4c289220eeda4879c477160b2545e95b68b5969'].pack('H*')])
+      expect(items).to include([1, 32, ['ce8be6272e43e85516033e24b4c289220eeda4879c477160b2545e95b68b5969'].pack('H*')])
     end
 
     it 'should include an item #2 with the payload as JSON' do
       _1, _2, items_stream = subject.message.unpack('cNa*')
       items = parse_items(items_stream)
-      items.should include([2, 126, '{"key1":1,"key2":"abc","aps":{"alert":"Houston, we have a problem.","badge":2701,"sound":"sosumi.aiff","content-available":1}}'])
+      expect(items).to include([2, 126, '{"key1":1,"key2":"abc","aps":{"alert":"Houston, we have a problem.","badge":2701,"sound":"sosumi.aiff","content-available":1}}'])
     end
 
     it 'should include an item #3 with the identifier' do
       _1, _2, items_stream = subject.message.unpack('cNa*')
       items = parse_items(items_stream)
-      items.should include([3, 4, [42].pack('N')])
+      expect(items).to include([3, 4, [42].pack('N')])
     end
 
     it 'should include an item #4 with the expiry' do
       _1, _2, items_stream = subject.message.unpack('cNa*')
       items = parse_items(items_stream)
-      items.should include([4, 4, [1234567890].pack('N')])
+      expect(items).to include([4, 4, [1234567890].pack('N')])
     end
 
     it 'should include an item #4 with the priority' do
       _1, _2, items_stream = subject.message.unpack('cNa*')
       items = parse_items(items_stream)
-      items.should include([5, 1, [10].pack('c')])
+      expect(items).to include([5, 1, [10].pack('c')])
     end
 
     it 'might be missing the identifier item' do
@@ -172,8 +210,8 @@ describe Houston::Notification do
       msg = notification.message
       _1, _2, items_stream = notification.message.unpack('cNa*')
       items = parse_items(items_stream)
-      items.should have(4).items
-      items.find { |item| item[0] == 3 }.should be_nil
+      expect(items.size).to eq(4)
+      expect(items.find { |item| item[0] == 3 }).to be_nil
     end
 
     it 'might be missing the expiry item' do
@@ -182,8 +220,8 @@ describe Houston::Notification do
       msg = notification.message
       _1, _2, items_stream = notification.message.unpack('cNa*')
       items = parse_items(items_stream)
-      items.should have(4).items
-      items.find { |item| item[0] == 4 }.should be_nil
+      expect(items.size).to eq(4)
+      expect(items.find { |item| item[0] == 4 }).to be_nil
     end
 
     it 'might be missing the priority item' do
@@ -192,8 +230,8 @@ describe Houston::Notification do
       msg = notification.message
       _1, _2, items_stream = notification.message.unpack('cNa*')
       items = parse_items(items_stream)
-      items.should have(4).items
-      items.find { |item| item[0] == 5 }.should be_nil
+      expect(items.size).to eq(4)
+      expect(items.find { |item| item[0] == 5 }).to be_nil
     end
   end
 end
