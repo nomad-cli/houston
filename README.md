@@ -52,7 +52,7 @@ If you want to manage your own persistent connection to Apple push services, suc
 ```ruby
 certificate = File.read("/path/to/apple_push_notification.pem")
 passphrase = "..."
-connection = Houston::Connection.new(APPLE_DEVELOPMENT_GATEWAY_URI, certificate, passphrase)
+connection = Houston::Connection.new(Houston::APPLE_DEVELOPMENT_GATEWAY_URI, certificate, passphrase)
 connection.open
 
 notification = Houston::Notification.new(device: token)
