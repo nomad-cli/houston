@@ -73,7 +73,7 @@ describe Houston::Notification do
 
     describe '#device' do
       subject { super().device }
-      it { '<ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969>' }
+      it { should == '<ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969>' }
     end
   end
 

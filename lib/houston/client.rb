@@ -29,7 +29,7 @@ module Houston
       @feedback_uri = ENV['APN_FEEDBACK_URI']
       @certificate = ENV['APN_CERTIFICATE']
       @passphrase = ENV['APN_CERTIFICATE_PASSPHRASE']
-      @timeout = ENV['APN_TIMEOUT'] || 0.5
+      @timeout = Float(ENV['APN_TIMEOUT'] || 0.5)
     end
 
     def push(*notifications)
