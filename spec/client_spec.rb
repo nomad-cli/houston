@@ -1,10 +1,14 @@
 require 'spec_helper'
 
 describe Houston::Client do
-  subject { Houston::Client }
+  subject { Houston::Client.development }
+
+  before(:each) do
+    stub_const("Houston::Connection", MockConnection)
+  end
 
   context '#development' do
-    subject { super().development }
+    subject { Houston::Client.development }
 
     describe '#gateway_uri' do
       subject { super().gateway_uri }
@@ -18,7 +22,7 @@ describe Houston::Client do
   end
 
   context '#production' do
-    subject { super().production }
+    subject { Houston::Client.production }
 
     describe '#gateway_uri' do
       subject { super().gateway_uri }
@@ -74,6 +78,24 @@ describe Houston::Client do
       it 'should accept zero arguments' do
         expect(Houston::Client.development.push()).to be_nil()
       end
+    end
+  end
+
+  describe '#unregistered_devices' do
+    it 'should correctly parse the feedback response and create a dictionary of unregistered devices with timestamps' do
+      subject.unregistered_devices.should == [
+        {:token=>"ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969", :timestamp=>443779200},
+        {:token=>"ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5970", :timestamp=>1388678223}
+      ]
+    end
+  end
+
+  describe '#devices' do
+    it 'should correctly parse the feedback response and create an array of unregistered devices' do
+      subject.devices.should == [
+        "ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969",
+        "ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5970"
+      ]
     end
   end
 end
