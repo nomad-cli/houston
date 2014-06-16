@@ -204,6 +204,13 @@ describe Houston::Notification do
       expect(items).to include([5, 1, [10].pack('c')])
     end
 
+    it 'should pad or truncate token so it is 32 bytes long' do
+      notification_options[:token] = '<ce8be627 2e43e855 16033e24 b4c28922>'
+      _1, _2, items_stream = subject.message.unpack('cNa*')
+      items = parse_items(items_stream)
+      expect(items).to include([1, 32, ['ce8be6272e43e85516033e24b4c2892200000000000000000000000000000000'].pack('H*')])
+    end
+
     it 'might be missing the identifier item' do
       notification_options.delete(:id)
       notification = Houston::Notification.new(notification_options)
