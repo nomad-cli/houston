@@ -62,7 +62,7 @@ module Houston
     private
     
     def device_token_item
-      [1, 32, @token.gsub(/[<\s>]/, '')].pack('cnH*')
+      [1, 32, @token.gsub(/[<\s>]/, '')].pack('cnH64')
     end
 
     def payload_item
