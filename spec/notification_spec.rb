@@ -198,7 +198,7 @@ describe Houston::Notification do
       expect(items).to include([4, 4, [1234567890].pack('N')])
     end
 
-    it 'should include an item #4 with the priority' do
+    it 'should include an item #5 with the priority' do
       _1, _2, items_stream = subject.message.unpack('cNa*')
       items = parse_items(items_stream)
       expect(items).to include([5, 1, [10].pack('c')])
