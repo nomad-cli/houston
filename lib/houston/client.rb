@@ -24,12 +24,12 @@ module Houston
       end
     end
 
-    def initialize
-      @gateway_uri = ENV['APN_GATEWAY_URI']
-      @feedback_uri = ENV['APN_FEEDBACK_URI']
-      @certificate = ENV['APN_CERTIFICATE']
-      @passphrase = ENV['APN_CERTIFICATE_PASSPHRASE']
-      @timeout = Float(ENV['APN_TIMEOUT'] || 0.5)
+    def initialize(gateway_uri=nil, feeback_uri=nil, cert=nil, passphase=nil, timeout=nil)
+      @gateway_uri  = gateway_uri || ENV['APN_GATEWAY_URI']
+      @feedback_uri = feedback_uri || ENV['APN_FEEDBACK_URI']
+      @certificate  = cert || ENV['APN_CERTIFICATE']
+      @passphrase   = passphrase || ENV['APN_CERTIFICATE_PASSPHRASE']
+      @timeout      = Float(timeout || ENV['APN_TIMEOUT'] || 0.5)
     end
 
     def push(*notifications)
