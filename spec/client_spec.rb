@@ -74,6 +74,44 @@ describe Houston::Client do
       end
     end
 
+    context 'passing options through initialize options' do
+      let(:apn_gateway_uri)   { "apn://gateway.example.com" }
+      let(:apn_feedback_uri)  { "apn://feedback.example.com" }
+      let(:apn_cert)          { "path/to/certificate" }
+      let(:apn_cert_pass)     { "passphrase" }
+      let(:apn_timeout)       { "10.0" }
+
+      subject do
+        Houston::Client.new(apn_gateway_uri, apn_feedback_uri, apn_cert, apn_cert_pass, apn_timeout)
+      end
+
+      describe '#gateway_uri' do
+        subject { super().gateway_uri }
+        it { should == apn_gateway_uri }
+      end
+
+      describe '#feedback_uri' do
+        subject { super().feedback_uri }
+        it { should == apn_feedback_uri }
+      end
+
+      describe '#certificate' do
+        subject { super().certificate }
+        it { should == apn_cert }
+      end
+
+      describe '#passphrase' do
+        subject { super().passphrase }
+        it { should == apn_cert_pass }
+      end
+
+      describe '#timeout' do
+        subject { super().timeout }
+        it { should be_a(Float) }
+        it { should == Float(apn_timeout) }
+      end
+    end
+
     describe '#push' do
       it 'should accept zero arguments' do
         expect(Houston::Client.development.push()).to be_nil()
