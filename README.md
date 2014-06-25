@@ -45,6 +45,15 @@ notification.custom_data = {foo: "bar"}
 APN.push(notification)
 ```
 
+### Silent Notifications
+
+To send a silent push notification, set `sound` to an empty string (`''`):
+
+```ruby
+Houston::Notification.new(:sound => '',
+                          :content_available => true)
+```
+
 ### Persistent Connections
 
 If you want to manage your own persistent connection to Apple push services, such as for background workers, here's how to do it:
