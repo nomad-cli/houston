@@ -31,7 +31,7 @@ module Houston
       json['aps'] ||= {}
       json['aps']['alert'] = @alert if @alert
       json['aps']['badge'] = @badge.to_i rescue 0 if @badge
-      json['aps']['sound'] = @sound ? @sound : nil
+      json['aps']['sound'] = @sound if @sound
       json['aps']['content-available'] = 1 if @content_available
 
       truncate(json)
@@ -67,7 +67,7 @@ module Houston
     private
 
     def device_token_item
-      [1, 32, @token.gsub(/[<\s>]/, '')].pack('cnH*')
+      [1, 32, @token.gsub(/[<\s>]/, '')].pack('cnH64')
     end
 
     def payload_item
