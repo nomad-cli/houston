@@ -3,8 +3,9 @@ require 'json'
 module Houston
   class Notification
     MAXIMUM_PAYLOAD_SIZE = 256
+    DEFAULT_OMISSION = '...'
 
-    attr_accessor :token, :alert, :badge, :sound, :content_available, :custom_data, :id, :expiry, :priority
+    attr_accessor :token, :alert, :badge, :sound, :content_available, :custom_data, :id, :expiry, :priority, :truncation, :omission
     attr_reader :sent_at
 
     alias :device :token
@@ -19,6 +20,8 @@ module Houston
       @id = options.delete(:id)
       @priority = options.delete(:priority)
       @content_available = options.delete(:content_available)
+      @truncation = !!options.delete(:truncation)
+      @omission = options.has_key?(:omission) ? options.delete(:omission) : DEFAULT_OMISSION
 
       @custom_data = options
     end
@@ -30,6 +33,8 @@ module Houston
       json['aps']['badge'] = @badge.to_i rescue 0 if @badge
       json['aps']['sound'] = @sound ? @sound : nil
       json['aps']['content-available'] = 1 if @content_available
+
+      truncate(json)
 
       json
     end
@@ -56,11 +61,11 @@ module Houston
     end
 
     def valid?
-      payload.to_json.bytesize <= MAXIMUM_PAYLOAD_SIZE
+      payload_valid?(payload)
     end
 
     private
-    
+
     def device_token_item
       [1, 32, @token.gsub(/[<\s>]/, '')].pack('cnH*')
     end
@@ -80,6 +85,46 @@ module Houston
 
     def priority_item
       [5, 1, @priority].pack('cnc') unless @priority.nil?
+    end
+
+    def truncate?(payload)
+      @truncation && !payload_valid?(payload) && truncatable?(payload)
+    end
+
+    def truncate(payload)
+      if truncate?(payload)
+        alert = payload['aps']['alert'].byteslice(0, available_bytesize_for_alert(payload))
+        alert = validate_alert_encoding(alert)
+        payload['aps']['alert'] = @omission ? alert + @omission : alert
+      end
+    end
+
+    def available_bytesize_for_alert(payload)
+      tmp_payload = payload.dup
+      tmp_payload['aps']['alert'] = @omission || ''
+      tmp_bytesize = tmp_payload.to_json.bytesize
+
+      MAXIMUM_PAYLOAD_SIZE > tmp_bytesize ? MAXIMUM_PAYLOAD_SIZE - tmp_bytesize : 0
+    end
+
+    def validate_alert_encoding(alert)
+      if alert.force_encoding('UTF-8').valid_encoding?
+        alert
+      else
+        validate_alert_encoding(alert.byteslice(0, alert.bytesize - 1))
+      end
+    end
+
+    def payload_valid?(payload)
+      payload.to_json.bytesize <= MAXIMUM_PAYLOAD_SIZE
+    end
+
+    def truncatable?(payload)
+      if (alert = payload['aps']['alert'])
+        !alert.empty?
+      else
+        false
+      end
     end
   end
 end

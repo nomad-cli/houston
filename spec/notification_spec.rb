@@ -64,6 +64,16 @@ describe Houston::Notification do
     it { should == { key1: 1, key2: 'abc' } }
   end
 
+  describe '#truncation' do
+    subject { super().truncation }
+    it { should be_false }
+  end
+
+  describe '#omission' do
+    subject { super().omission }
+    it { should be Houston::Notification::DEFAULT_OMISSION }
+  end
+
   context 'using :device instead of :token' do
     subject do
       notification_options[:device] = notification_options[:token]
@@ -234,4 +244,353 @@ describe Houston::Notification do
       expect(items.find { |item| item[0] == 5 }).to be_nil
     end
   end
+
+  def create_payload(size)
+    payload = {
+      'aps' => {
+        'alert' => '',
+        'badge' => 2701
+      }
+    }
+
+    tmp_size = payload.to_json.bytesize
+    missing = size - tmp_size
+    payload['aps']['alert'] = 'a' * missing
+
+    payload
+  end
+
+  describe '#truncatable?' do
+    context 'When alert is present' do
+      it 'should be true' do
+        payload = { 'aps' => { 'alert' => 'Houston, we have a problem.' } }
+        expect(Houston::Notification.new.send(:truncatable?, payload)).to be true
+      end
+    end
+    context 'When alert is an empty string' do
+      it 'should be false' do
+        payload = { 'aps' => { 'alert' => '' } }
+        expect(Houston::Notification.new.send(:truncatable?, payload)).to be false
+      end
+    end
+    context 'When alert is missing' do
+      it 'should be false' do
+        payload = { 'aps' => {} }
+        expect(Houston::Notification.new.send(:truncatable?, payload)).to be false
+      end
+    end
+  end
+
+  describe '#truncate' do
+    context 'When payload bytesize exceeds MAXIMUM_PAYLOAD_SIZE' do
+      context 'and omission is "..."' do
+        it 'should truncate the alert' do
+          payload = create_payload(Houston::Notification::MAXIMUM_PAYLOAD_SIZE + 1)
+          alert_length = payload['aps']['alert'].length
+          notification = Houston::Notification.new(truncation: true)
+          notification.omission = '...'
+          notification.send(:truncate, payload)
+          expect(alert_length).to be > payload['aps']['alert'].length
+        end
+      end
+      context 'and omission is nil' do
+        it 'should truncate the alert' do
+          payload = create_payload(Houston::Notification::MAXIMUM_PAYLOAD_SIZE + 1)
+          alert_length = payload['aps']['alert'].length
+          notification = Houston::Notification.new(truncation: true)
+          notification.omission = nil
+          notification.send(:truncate, payload)
+          expect(alert_length).to be > payload['aps']['alert'].length
+        end
+      end
+      context 'and omission is empty string' do
+        it 'should truncate the alert' do
+          payload = create_payload(Houston::Notification::MAXIMUM_PAYLOAD_SIZE + 1)
+          alert_length = payload['aps']['alert'].length
+          notification = Houston::Notification.new(truncation: true)
+          notification.omission = ''
+          notification.send(:truncate, payload)
+          expect(alert_length).to be > payload['aps']['alert'].length
+        end
+      end
+      context 'and omission is false' do
+        it 'should truncate the alert' do
+          payload = create_payload(Houston::Notification::MAXIMUM_PAYLOAD_SIZE + 1)
+          alert_length = payload['aps']['alert'].length
+          notification = Houston::Notification.new(truncation: true)
+          notification.omission = false
+          notification.send(:truncate, payload)
+          expect(alert_length).to be > payload['aps']['alert'].length
+        end
+      end
+    end
+    context 'When payload bytesize is equal to MAXIMUM_PAYLOAD_SIZE' do
+      context 'and omission is "..."' do
+        it 'should not truncate the alert' do
+          payload = create_payload(Houston::Notification::MAXIMUM_PAYLOAD_SIZE)
+          alert_length = payload['aps']['alert'].length
+          notification = Houston::Notification.new(truncation: true)
+          notification.omission = '...'
+          notification.send(:truncate, payload)
+          expect(alert_length).to eq payload['aps']['alert'].length
+        end
+      end
+      context 'and omission is nil' do
+        it 'should not truncate the alert' do
+          payload = create_payload(Houston::Notification::MAXIMUM_PAYLOAD_SIZE)
+          alert_length = payload['aps']['alert'].length
+          notification = Houston::Notification.new(truncation: true)
+          notification.omission = nil
+          notification.send(:truncate, payload)
+          expect(alert_length).to eq payload['aps']['alert'].length
+        end
+      end
+      context 'and omission is empty string' do
+        it 'should not truncate the alert' do
+          payload = create_payload(Houston::Notification::MAXIMUM_PAYLOAD_SIZE)
+          alert_length = payload['aps']['alert'].length
+          notification = Houston::Notification.new(truncation: true)
+          notification.omission = ''
+          notification.send(:truncate, payload)
+          expect(alert_length).to eq payload['aps']['alert'].length
+        end
+      end
+      context 'and omission is false' do
+        it 'should not truncate the alert' do
+          payload = create_payload(Houston::Notification::MAXIMUM_PAYLOAD_SIZE)
+          alert_length = payload['aps']['alert'].length
+          notification = Houston::Notification.new(truncation: true)
+          notification.omission = false
+          notification.send(:truncate, payload)
+          expect(alert_length).to eq payload['aps']['alert'].length
+        end
+      end
+    end
+    context 'When payload bytesize does not exceed MAXIMUM_PAYLOAD_SIZE' do
+      context 'and omission is "..."' do
+        it 'should not truncate the alert' do
+          payload = create_payload(Houston::Notification::MAXIMUM_PAYLOAD_SIZE - 1)
+          alert_length = payload['aps']['alert'].length
+          notification = Houston::Notification.new(truncation: true)
+          notification.omission = '...'
+          notification.send(:truncate, payload)
+          expect(alert_length).to eq payload['aps']['alert'].length
+        end
+      end
+      context 'and omission is nil' do
+        it 'should not truncate the alert' do
+          payload = create_payload(Houston::Notification::MAXIMUM_PAYLOAD_SIZE - 1)
+          alert_length = payload['aps']['alert'].length
+          notification = Houston::Notification.new(truncation: true)
+          notification.omission = nil
+          notification.send(:truncate, payload)
+          expect(alert_length).to eq payload['aps']['alert'].length
+        end
+      end
+      context 'and omission is empty string' do
+        it 'should not truncate the alert' do
+          payload = create_payload(Houston::Notification::MAXIMUM_PAYLOAD_SIZE - 1)
+          alert_length = payload['aps']['alert'].length
+          notification = Houston::Notification.new(truncation: true)
+          notification.omission = ''
+          notification.send(:truncate, payload)
+          expect(alert_length).to eq payload['aps']['alert'].length
+        end
+      end
+      context 'and omission is false' do
+        it 'should not truncate the alert' do
+          payload = create_payload(Houston::Notification::MAXIMUM_PAYLOAD_SIZE - 1)
+          alert_length = payload['aps']['alert'].length
+          notification = Houston::Notification.new(truncation: true)
+          notification.omission = false
+          notification.send(:truncate, payload)
+          expect(alert_length).to eq payload['aps']['alert'].length
+        end
+      end
+    end
+  end
+
+  describe '#validate_alert_encoding' do
+    context 'When alert is valid string' do
+      it 'should return alert without change' do
+        notification = Houston::Notification.new
+        expect(notification.send(:validate_alert_encoding, 'Houston')).to eq 'Houston'
+      end
+    end
+    context 'When alert is invalid UTF-8 string' do
+      it 'should fix the enconding of alert' do
+        notification = Houston::Notification.new
+        expect(notification.send(:validate_alert_encoding, "Houston\xC5")).to eq 'Houston'
+      end
+    end
+  end
+
+  describe '#available_bytesize_for_alert' do
+
+    let(:payload) do
+      # bytesize of this payload is 33
+      {
+        'aps' => {
+          'alert' => '',
+          'badge' => 2701
+        }
+      }
+    end
+
+    let(:notification) { Houston::Notification.new }
+
+    before(:each) do
+      stub_const('Houston::Notification::MAXIMUM_PAYLOAD_SIZE', 100)
+    end
+
+    context 'When payload bytesize does not exceed MAXIMUM_PAYLOAD_SIZE' do
+      context 'and omission is "..."' do
+        it 'should return available bytesize for alert' do
+          payload['aps']['alert'] = 'a'
+          notification.omission = '...'
+          # 64 = 100 - 33 - 3
+          # 100 => max payload size
+          # 33 => payload bytesize without alert
+          # 3 => omission bytesize
+          expect(notification.send(:available_bytesize_for_alert, payload)).to be 64
+        end
+      end
+      context 'and omission is empty string' do
+        it 'should return available bytesize for alert' do
+          payload['aps']['alert'] = 'a'
+          notification.omission = ''
+          # 67 = 100 - 33 - 0
+          # 100 => max payload size
+          # 33 => payload bytesize without alert
+          # 0 => omission bytesize
+          expect(notification.send(:available_bytesize_for_alert, payload)).to be 67
+        end
+      end
+      context 'and omission is nil' do
+        it 'should return available bytesize for alert' do
+          payload['aps']['alert'] = 'a'
+          notification.omission = nil
+          # 67 = 100 - 33 - 0
+          # 100 => max payload size
+          # 33 => payload bytesize without alert
+          # 0 => omission bytesize
+          expect(notification.send(:available_bytesize_for_alert, payload)).to be 67
+        end
+      end
+    end
+    context 'When payload is equal to MAXIMUM_PAYLOAD_SIZE' do
+      context 'and omission is "..."' do
+        it 'should return available bytesize for alert' do
+          payload['aps']['alert'] = 'a' * 67
+          notification.omission = '...'
+          expect(notification.send(:available_bytesize_for_alert, payload)).to be 64
+        end
+      end
+      context 'and omission is empty string' do
+        it 'should return available bytesize for alert' do
+          payload['aps']['alert'] = 'a' * 67
+          notification.omission = ''
+          expect(notification.send(:available_bytesize_for_alert, payload)).to be 67
+        end
+      end
+      context 'and omission is nil' do
+        it 'should return available bytesize for alert' do
+          payload['aps']['alert'] = 'a' * 67
+          notification.omission = nil
+          expect(notification.send(:available_bytesize_for_alert, payload)).to be 67
+        end
+      end
+    end
+    context 'When payload exceeds MAXIMUM_PAYLOAD_SIZE' do
+      context 'and omission is "..."' do
+        it 'should return available bytesize for alert' do
+          payload['aps']['alert'] = 'a' * 68
+          notification.omission = '...'
+          expect(notification.send(:available_bytesize_for_alert, payload)).to be 64
+        end
+      end
+      context 'and omission is empty string' do
+        it 'should return available bytesize for alert' do
+          payload['aps']['alert'] = 'a' * 68
+          notification.omission = ''
+          expect(notification.send(:available_bytesize_for_alert, payload)).to be 67
+        end
+      end
+      context 'and omission is nil' do
+        it 'should return available bytesize for alert' do
+          payload['aps']['alert'] = 'a' * 68
+          notification.omission = nil
+          expect(notification.send(:available_bytesize_for_alert, payload)).to be 67
+        end
+      end
+    end
+    context 'When payload exceeds MAXIMUM_PAYLOAD_SIZE without alert' do
+      context 'and omission is "..."' do
+        it 'should return 0' do
+          payload['custom'] = 'a' * 68
+          notification.omission = '...'
+          expect(notification.send(:available_bytesize_for_alert, payload)).to be 0
+        end
+      end
+      context 'and omission is empty string' do
+        it 'should return 0' do
+          payload['custom'] = 'a' * 68
+          notification.omission = ''
+          expect(notification.send(:available_bytesize_for_alert, payload)).to be 0
+        end
+      end
+      context 'and omission is nil' do
+        it 'should return 0' do
+          payload['custom'] = 'a' * 68
+          notification.omission = nil
+          expect(notification.send(:available_bytesize_for_alert, payload)).to be 0
+        end
+      end
+    end
+  end
+
+  describe '#payload_valid?' do
+    context 'When payload exceeds MAXIMUM_PAYLOAD_SIZE' do
+      it 'should be false' do
+        payload = create_payload(Houston::Notification::MAXIMUM_PAYLOAD_SIZE + 1)
+        expect(Houston::Notification.new.send(:payload_valid?, payload)).to be false
+      end
+    end
+    context 'When payload does not exceed MAXIMUM_PAYLOAD_SIZE' do
+      it 'should be true' do
+        payload = create_payload(Houston::Notification::MAXIMUM_PAYLOAD_SIZE)
+        expect(Houston::Notification.new.send(:payload_valid?, payload)).to be true
+      end
+    end
+  end
+
+  describe '#truncatable?' do
+    context 'When payload has alert key' do
+      context 'and alert is nil' do
+        it 'should return false' do
+         notification = Houston::Notification.new
+         expect(notification.send(:truncatable?, { 'aps' => { 'alert' => nil } })).to be_false
+        end
+      end
+      context 'and alert is empty string' do
+        it 'should return false' do
+         notification = Houston::Notification.new
+         expect(notification.send(:truncatable?, { 'aps' => { 'alert' => '' } })).to be_false
+        end
+      end
+      context 'and alert is present' do
+        it 'should return true' do
+         notification = Houston::Notification.new
+         expect(notification.send(:truncatable?, { 'aps' => { 'alert' => 'Houston' } })).to be_true
+        end
+      end
+    end
+    context 'When payload does not have alert key' do
+      it 'should return false' do
+       notification = Houston::Notification.new
+       expect(notification.send(:truncatable?, { 'aps' => {} })).to be_false
+      end
+    end
+  end
+
 end
