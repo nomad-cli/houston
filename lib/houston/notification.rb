@@ -5,8 +5,8 @@ module Houston
     MAXIMUM_PAYLOAD_SIZE = 256
     DEFAULT_OMISSION = '...'
 
-    attr_accessor :token, :alert, :badge, :sound, :content_available, :custom_data, :id, :expiry, :priority, :omission
-    attr_reader :sent_at, :truncation
+    attr_accessor :token, :alert, :badge, :sound, :content_available, :custom_data, :id, :expiry, :priority, :truncation, :omission
+    attr_reader :sent_at
 
     alias :device :token
     alias :device= :token=
@@ -62,10 +62,6 @@ module Houston
 
     def valid?
       payload_valid?(payload)
-    end
-
-    def truncation=(truncation)
-      @truncation = !!truncation
     end
 
     private

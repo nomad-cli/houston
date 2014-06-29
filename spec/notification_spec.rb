@@ -252,30 +252,6 @@ describe Houston::Notification do
     end
   end
 
-  describe '#truncation=' do
-    context 'When parameter is true' do
-      it 'should return true' do
-        notification = Houston::Notification.new
-        notification.truncation = true
-        expect(notification.truncation).to be_true
-      end
-    end
-    context 'When parameter is false' do
-      it 'should return false' do
-        notification = Houston::Notification.new
-        notification.truncation = false
-        expect(notification.truncation).to be_false
-      end
-    end
-    context 'When parameter is nil' do
-      it 'should return false' do
-        notification = Houston::Notification.new
-        notification.truncation = nil
-        expect(notification.truncation).to be_false
-      end
-    end
-  end
-
   def create_payload(size)
     payload = {
       'aps' => {
