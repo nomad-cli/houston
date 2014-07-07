@@ -25,6 +25,7 @@ command :push do |c|
   c.option '-m', '--alert ALERT', 'Body of the alert to send in the push notification'
   c.option '-b', '--badge NUMBER', 'Badge number to set with the push notification'
   c.option '-s', '--sound SOUND', 'Sound to play with the notification'
+  c.option '-y', '--category CATEGORY', 'Category of notification'
   c.option '-n', '--[no]-newsstand', 'Indicates content available for Newsstand'
   c.option '-d', '--data KEY=VALUE', Array, 'Passes custom data to payload (as comma-delimited "key=value" declarations)'
   c.option '-P', '--payload PAYLOAD', 'JSON payload for notifications'
@@ -47,6 +48,7 @@ command :push do |c|
     @alert = options.alert
     @badge = options.badge.nil? ? nil : options.badge.to_i
     @sound = options.sound
+    @category = options.category
     @content_available = !!options.newsstand
 
     if options.payload
@@ -76,6 +78,7 @@ command :push do |c|
       notification.alert = @alert if @alert
       notification.badge = @badge if @badge
       notification.sound = @sound if @sound
+      notification.category = @category if @category
       notification.content_available = @content_available if @content_available
 
       @notifications << notification
