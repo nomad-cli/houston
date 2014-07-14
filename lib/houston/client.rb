@@ -1,4 +1,6 @@
 module Houston
+  require 'logger'
+
   APPLE_PRODUCTION_GATEWAY_URI = "apn://gateway.push.apple.com:2195"
   APPLE_PRODUCTION_FEEDBACK_URI = "apn://feedback.push.apple.com:2196"
 
@@ -6,7 +8,7 @@ module Houston
   APPLE_DEVELOPMENT_FEEDBACK_URI = "apn://feedback.sandbox.push.apple.com:2196"
 
   class Client
-    attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase, :timeout
+    attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase, :timeout, :logger
 
     class << self
       def development
@@ -72,6 +74,8 @@ module Houston
 
       if error
         command, status, index = error.unpack("ccN")
+        notifications[index].apns_error_code = status
+        logger.warn "Push failed for '#{notifications[index].inspect}'. Error was '#{notifications[index].apns_error}'."
         notifications.slice!(0..index)
         notifications.each(&:mark_as_unsent!)
         push(*notifications)
@@ -96,5 +100,10 @@ module Houston
     def devices
       unregistered_devices.collect{|device| device[:token]}
     end
+
+    def logger
+      @logger ||= Logger.new(STDOUT)
+    end
+      
   end
 end

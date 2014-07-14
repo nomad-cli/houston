@@ -4,7 +4,8 @@ module Houston
   class Notification
     MAXIMUM_PAYLOAD_SIZE = 256
 
-    attr_accessor :token, :alert, :badge, :sound, :content_available, :custom_data, :id, :expiry, :priority
+    attr_accessor :token, :alert, :badge, :sound, :content_available, :custom_data, :id, :expiry, :priority,
+      :apns_error_code
     attr_reader :sent_at
 
     alias :device :token
@@ -57,6 +58,22 @@ module Houston
 
     def valid?
       payload.to_json.bytesize <= MAXIMUM_PAYLOAD_SIZE
+    end
+
+    def apns_error
+      {
+        0 => nil,
+        1 => "Processing error",
+        2 => "Missing device token",
+        3 => "Missing topic",
+        4 => "Missing payload",
+        5 => "Invalid token size",
+        6 => "Invalid topic size",
+        7 => "Invalid payload size",
+        8 => "Invalid token",
+        10 => "Shutdown",
+        255 => "Unknown error"
+      }[@apns_error_code]
     end
 
     private
