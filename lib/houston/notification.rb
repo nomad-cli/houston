@@ -2,11 +2,28 @@ require 'json'
 
 module Houston
   class Notification
+    class APNSError < RuntimeError
+      # See: https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/CommunicatingWIthAPS.html#//apple_ref/doc/uid/TP40008194-CH101-SW12
+      CODES = {
+        0 => "No errors encountered",
+        1 => "Processing error",
+        2 => "Missing device token",
+        3 => "Missing topic",
+        4 => "Missing payload",
+        5 => "Invalid token size",
+        6 => "Invalid topic size",
+        7 => "Invalid payload size",
+        8 => "Invalid token",
+        10 => "Shutdown",
+        255 => "Unknown error"
+      }
+    end
+
     MAXIMUM_PAYLOAD_SIZE = 256
 
-    attr_accessor :token, :alert, :badge, :sound, :content_available, :custom_data, :id, :expiry, :priority,
-      :apns_error_code
+    attr_accessor :token, :alert, :badge, :sound, :content_available, :custom_data, :id, :expiry, :priority
     attr_reader :sent_at
+    attr_writer :apns_error_code
 
     alias :device :token
     alias :device= :token=
@@ -60,24 +77,12 @@ module Houston
       payload.to_json.bytesize <= MAXIMUM_PAYLOAD_SIZE
     end
 
-    def apns_error
-      {
-        0 => nil,
-        1 => "Processing error",
-        2 => "Missing device token",
-        3 => "Missing topic",
-        4 => "Missing payload",
-        5 => "Invalid token size",
-        6 => "Invalid topic size",
-        7 => "Invalid payload size",
-        8 => "Invalid token",
-        10 => "Shutdown",
-        255 => "Unknown error"
-      }[@apns_error_code]
+    def error
+      APNSError.new(APNSError::CODES[@apns_error_code]) if @apns_error_code.nonzero?
     end
 
     private
-    
+
     def device_token_item
       [1, 32, @token.gsub(/[<\s>]/, '')].pack('cnH64')
     end

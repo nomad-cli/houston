@@ -45,6 +45,14 @@ notification.custom_data = {foo: "bar"}
 APN.push(notification)
 ```
 
+### Error Handling
+
+If an error occurs when sending a particular notification, its `error` attribute will be populated:
+
+```ruby
+puts "Error: #{notification.error}." if notification.error
+```
+
 ### Silent Notifications
 
 To send a silent push notification, set `sound` to an empty string (`''`):
@@ -70,34 +78,6 @@ connection.write(notification.message)
 
 connection.close
 ```
-
-### Logging server errors
-The notification server can respond with some error information for failed deliveries. By default, this information is logged to STDOUT.
-
-Logger initialization can be customized:
-
-```ruby
-APN = Houston::Client.development
-APN.logger = Logger.new(STDERR) # will log to STDERR
-
-APN.logger = Rails.logger # if using houston from a rails app, will use the Rails application logger.
-
-```
-
-Learn more about logger initialization here http://www.ruby-doc.org/stdlib-2.0.0/libdoc/logger/rdoc/Logger.html#class-Logger-label-How+to+create+a+logger
-
-Server error messages on `push` calls are logged at WARN level.
-
-The error code and matching message can be accessed per notification, for instance:
-
-```ruby
-APN.push(notification)
-# imagine notification failure by server error on push
-if notification.apns_error
-  puts "Failed to send notification. Server responded '#{notification.apns_error}'. Error code was #{notification.apns_error_code}."
-end
-```
-
 
 ### Feedback Service
 
