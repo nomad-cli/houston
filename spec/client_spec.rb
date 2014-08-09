@@ -83,7 +83,7 @@ describe Houston::Client do
 
   describe '#unregistered_devices' do
     it 'should correctly parse the feedback response and create a dictionary of unregistered devices with timestamps' do
-      subject.unregistered_devices.should == [
+      expect(subject.unregistered_devices).to eq [
         {:token=>"ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969", :timestamp=>443779200},
         {:token=>"ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5970", :timestamp=>1388678223}
       ]
@@ -92,7 +92,7 @@ describe Houston::Client do
 
   describe '#devices' do
     it 'should correctly parse the feedback response and create an array of unregistered devices' do
-      subject.devices.should == [
+      expect(subject.devices).to eq [
         "ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969",
         "ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5970"
       ]

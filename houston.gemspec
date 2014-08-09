@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
   s.add_dependency "commander", "~> 4.1"
   s.add_dependency "json"
 
-  s.add_development_dependency "rspec", "~> 2.0"
+  s.add_development_dependency "rspec", "~> 3.0"
   s.add_development_dependency "rake"
   s.add_development_dependency "simplecov"
 

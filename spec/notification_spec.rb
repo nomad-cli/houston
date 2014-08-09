@@ -11,7 +11,6 @@ describe Houston::Notification do
       id: 42,
       priority: 10,
       content_available: true,
-      # custom data
       key1: 1,
       key2: 'abc'
     }
@@ -56,7 +55,7 @@ describe Houston::Notification do
 
   describe '#content_available' do
     subject { super().content_available }
-    it { should be_true }
+    it { should be_truthy }
   end
 
   describe '#custom_data' do
@@ -140,18 +139,18 @@ describe Houston::Notification do
 
   describe '#sent?' do
     it 'should be false initially' do
-      expect(subject.sent?).to be_false
+      expect(subject.sent?).to be_falsey
     end
 
     it 'should be true after marking as sent' do
       subject.mark_as_sent!
-      expect(subject.sent?).to be_true
+      expect(subject.sent?).to be_truthy
     end
 
     it 'should be false after marking as unsent' do
       subject.mark_as_sent!
       subject.mark_as_unsent!
-      expect(subject.sent?).to be_false
+      expect(subject.sent?).to be_falsey
     end
   end
 
