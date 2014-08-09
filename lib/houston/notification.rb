@@ -24,7 +24,8 @@ module Houston
     end
 
     def payload
-      json = {}.merge(@custom_data || {})
+      json = {}.merge(@custom_data || {}).inject({}){|h,(k,v)| h[k.to_s] = v; h}
+
       json['aps'] ||= {}
       json['aps']['alert'] = @alert if @alert
       json['aps']['badge'] = @badge.to_i rescue 0 if @badge
@@ -60,7 +61,7 @@ module Houston
     end
 
     private
-    
+
     def device_token_item
       [1, 32, @token.gsub(/[<\s>]/, '')].pack('cnH64')
     end
