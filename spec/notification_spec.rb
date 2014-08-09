@@ -86,16 +86,16 @@ describe Houston::Notification do
           'sound' => 'sosumi.aiff',
           'content-available' => 1
         },
-        :key1 => 1,
-        :key2 => 'abc'
+        'key1' => 1,
+        'key2' => 'abc'
       })
     end
 
     it 'should create a dictionary of only custom data and empty aps' do
       expect(Houston::Notification.new(key1: 123, key2: 'xyz').payload).to eq({
         'aps' => {},
-        :key1 => 123,
-        :key2 => 'xyz'
+        'key1' => 123,
+        'key2' => 'xyz'
       })
     end
 
@@ -127,6 +127,13 @@ describe Houston::Notification do
       notification_options = { :badge => 567, 'aps' => { 'loc-key' => 'my-key' } }
       expect(Houston::Notification.new(notification_options).payload).to eq({
         'aps' => { 'loc-key' => 'my-key', 'badge' => 567 }
+      })
+    end
+
+    it 'should create notification from hash with string and symbol keys' do
+      notification_options = { :badge => 567, :aps => { 'loc-key' => 'my-key' } }
+      expect(Houston::Notification.new(notification_options).payload['aps']).to eq({
+        'loc-key' => 'my-key', 'badge' => 567
       })
     end
   end
