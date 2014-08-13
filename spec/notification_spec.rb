@@ -247,4 +247,31 @@ describe Houston::Notification do
       expect(items.find { |item| item[0] == 5 }).to be_nil
     end
   end
+
+  describe '#error' do
+    context 'a status code has been set' do
+      it 'returns an error object mapped to that status code' do
+        status_code = 1
+        notification = Houston::Notification.new(notification_options)
+        notification.apns_error_code = status_code
+        expect(notification.error.message).to eq(Houston::Notification::APNSError::CODES[status_code])
+      end
+    end
+
+    context 'a status code has been set to 0' do
+      it 'returns nil' do
+        status_code = 0
+        notification = Houston::Notification.new(notification_options)
+        notification.apns_error_code = status_code
+        expect(notification.error).to be_nil
+      end
+    end
+
+    context 'a status code has not been set' do
+      it 'returns nil' do
+        notification = Houston::Notification.new(notification_options)
+        expect(notification.error).to be_nil
+      end
+    end
+  end
 end
