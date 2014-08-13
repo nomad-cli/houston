@@ -36,7 +36,6 @@ module Houston
       return if notifications.empty?
 
       notifications.flatten!
-      error = nil
 
       Connection.open(@gateway_uri, @certificate, @passphrase) do |connection|
         ssl = connection.ssl
@@ -51,31 +50,15 @@ module Houston
           connection.write(notification.message)
           notification.mark_as_sent!
 
-          break if notifications.count == 1 || notification == notifications.last
-
           read_socket, write_socket = IO.select([ssl], [ssl], [ssl], nil)
           if (read_socket && read_socket[0])
-            error = connection.read(6)
-            break
+            if error = connection.read(6)
+              command, status, index = error.unpack("ccN")
+              notification.apns_error_code = status
+              notification.mark_as_unsent!
+            end
           end
         end
-
-        return if notifications.count == 1
-
-        unless error
-          read_socket, write_socket = IO.select([ssl], nil, [ssl], timeout)
-          if (read_socket && read_socket[0])
-            error = connection.read(6)
-          end
-        end
-      end
-
-      if error
-        command, status, index = error.unpack("ccN")
-        notifications[index].apns_error_code = status
-        notifications.slice!(0..index)
-        notifications.each(&:mark_as_unsent!)
-        push(*notifications)
       end
     end
 
