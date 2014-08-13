@@ -17,6 +17,14 @@ module Houston
         10 => "Shutdown",
         255 => "Unknown error"
       }
+
+      attr_reader :code
+
+      def initialize(code)
+        raise ArgumentError unless CODES.include?(code)
+        super(CODES[code])
+        @code = code
+      end
     end
 
     MAXIMUM_PAYLOAD_SIZE = 2048
@@ -81,7 +89,7 @@ module Houston
     end
 
     def error
-      APNSError.new(APNSError::CODES[@apns_error_code]) if @apns_error_code && @apns_error_code.nonzero?
+      APNSError.new(@apns_error_code) if @apns_error_code and @apns_error_code.nonzero?
     end
 
     private
