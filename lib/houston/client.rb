@@ -50,7 +50,7 @@ module Houston
           connection.write(notification.message)
           notification.mark_as_sent!
 
-          read_socket, write_socket = IO.select([ssl], [ssl], [ssl], nil)
+          read_socket, write_socket = IO.select([ssl], [], [ssl], timeout)
           if (read_socket && read_socket[0])
             if error = connection.read(6)
               command, status, index = error.unpack("ccN")
