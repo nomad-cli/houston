@@ -2,3 +2,6 @@
 *.cer
 Gemfile.lock
 coverage/
+
+.DS_Store
+
