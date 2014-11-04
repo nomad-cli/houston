@@ -16,51 +16,64 @@ describe Houston::Notification do
     }
   }
 
+  let(:notification_options_to_string) {
+    notification_options.inject({}){|h,(k,v)| h[k.to_s] = v; h}
+  }
+
   subject { Houston::Notification.new(notification_options) }
 
-  describe '#token' do
-    subject { super().token }
-    it { should == '<ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969>' }
-  end
+  ['string', 'hash'].each do |type|
 
-  describe '#alert' do
-    subject { super().alert }
-    it { should == 'Houston, we have a problem.' }
-  end
+    context "initialize options to #{type}" do
 
-  describe '#badge' do
-    subject { super().badge }
-    it { should == 2701 }
-  end
+      subject { Houston::Notification.new(notification_options_to_string) } if type == 'string'
 
-  describe '#sound' do
-    subject { super().sound }
-    it { should == 'sosumi.aiff' }
-  end
+      describe '#token' do
+        subject { super().token }
+        it { should == '<ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969>' }
+      end
 
-  describe '#expiry' do
-    subject { super().expiry }
-    it { should == 1234567890 }
-  end
+      describe '#alert' do
+        subject { super().alert }
+        it { should == 'Houston, we have a problem.' }
+      end
 
-  describe '#id' do
-    subject { super().id }
-    it { should == 42 }
-  end
+      describe '#badge' do
+        subject { super().badge }
+        it { should == 2701 }
+      end
 
-  describe '#priority' do
-    subject { super().priority }
-    it { should == 10 }
-  end
+      describe '#sound' do
+        subject { super().sound }
+        it { should == 'sosumi.aiff' }
+      end
 
-  describe '#content_available' do
-    subject { super().content_available }
-    it { should be_truthy }
-  end
+      describe '#expiry' do
+        subject { super().expiry }
+        it { should == 1234567890 }
+      end
 
-  describe '#custom_data' do
-    subject { super().custom_data }
-    it { should == { key1: 1, key2: 'abc' } }
+      describe '#id' do
+        subject { super().id }
+        it { should == 42 }
+      end
+
+      describe '#priority' do
+        subject { super().priority }
+        it { should == 10 }
+      end
+
+      describe '#content_available' do
+        subject { super().content_available }
+        it { should be_truthy }
+      end
+
+      describe '#custom_data' do
+        subject { super().custom_data }
+        it { should == { key1: 1, key2: 'abc' } }
+      end
+    end
+
   end
 
   context 'using :device instead of :token' do
