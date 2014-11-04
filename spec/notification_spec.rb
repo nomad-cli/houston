@@ -22,7 +22,7 @@ describe Houston::Notification do
 
   subject { Houston::Notification.new(notification_options) }
 
-  ['string', 'hash'].each do |type|
+  ['string', 'symbol'].each do |type|
 
     context "initialize options to #{type}" do
 
