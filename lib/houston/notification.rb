@@ -37,6 +37,7 @@ module Houston
     alias :device= :token=
 
     def initialize(options = {})
+      options = options.inject({}){|h,(k,v)| h[k.to_sym] = v; h}
       @token = options.delete(:token) || options.delete(:device)
       @alert = options.delete(:alert)
       @badge = options.delete(:badge)
