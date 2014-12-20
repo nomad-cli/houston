@@ -7,6 +7,7 @@ describe Houston::Notification do
       alert: 'Houston, we have a problem.',
       badge: 2701,
       sound: 'sosumi.aiff',
+      category: 'INVITE_CATEGORY',
       expiry: 1234567890,
       id: 42,
       priority: 10,
@@ -36,6 +37,11 @@ describe Houston::Notification do
   describe '#sound' do
     subject { super().sound }
     it { should == 'sosumi.aiff' }
+  end
+
+  describe '#category' do
+    subject { super().category }
+    it { should == 'INVITE_CATEGORY' }
   end
 
   describe '#expiry' do
@@ -83,6 +89,7 @@ describe Houston::Notification do
           'alert' => 'Houston, we have a problem.',
           'badge' => 2701,
           'sound' => 'sosumi.aiff',
+          'category' => 'INVITE_CATEGORY',
           'content-available' => 1
         },
         'key1' => 1,
@@ -113,6 +120,12 @@ describe Houston::Notification do
     it 'should create a dictionary only with sound' do
       expect(Houston::Notification.new(sound: 'ring.aiff').payload).to eq({
         'aps' => { 'sound' => 'ring.aiff' }
+      })
+    end
+
+    it 'should create a dictionary only with category' do
+      expect(Houston::Notification.new(category: 'INVITE_CATEGORY').payload).to eq({
+        'aps' => { 'category' => 'INVITE_CATEGORY' }
       })
     end
 
@@ -162,7 +175,7 @@ describe Houston::Notification do
 
     it 'should create a message with correct frame length' do
       _1, length, _2 = subject.message.unpack('cNa*')
-      expect(length).to eq(182)
+      expect(length).to eq(211)
     end
 
     def parse_items(items_stream)
@@ -189,7 +202,7 @@ describe Houston::Notification do
     it 'should include an item #2 with the payload as JSON' do
       _1, _2, items_stream = subject.message.unpack('cNa*')
       items = parse_items(items_stream)
-      expect(items).to include([2, 126, '{"key1":1,"key2":"abc","aps":{"alert":"Houston, we have a problem.","badge":2701,"sound":"sosumi.aiff","content-available":1}}'])
+      expect(items).to include([2, 155, '{"key1":1,"key2":"abc","aps":{"alert":"Houston, we have a problem.","badge":2701,"sound":"sosumi.aiff","category":"INVITE_CATEGORY","content-available":1}}'])
     end
 
     it 'should include an item #3 with the identifier' do
