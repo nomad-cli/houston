@@ -39,7 +39,6 @@ describe Houston::Client do
     context 'passing options through ENV' do
       ENV['APN_GATEWAY_URI'] = "apn://gateway.example.com"
       ENV['APN_FEEDBACK_URI'] = "apn://feedback.example.com"
-      ENV['APN_CERTIFICATE'] = "path/to/certificate"
       ENV['APN_CERTIFICATE_PASSPHRASE'] = "passphrase"
       ENV['APN_TIMEOUT'] = "10.0"
 
@@ -59,7 +58,7 @@ describe Houston::Client do
 
       describe '#certificate' do
         subject { super().certificate }
-        it { should == ENV['APN_CERTIFICATE'] }
+        it { should be_nil }
       end
 
       describe '#passphrase' do
