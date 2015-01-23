@@ -118,3 +118,44 @@ command :push do |c|
     end
   end
 end
+
+command :feedback do |c|
+  c.syntax = 'apn feedback [...]'
+  c.summary = 'Queries the APN Feedback Service for failed device tokens.'
+  c.description = ''
+
+  c.example 'description', 'apn feedback -c /path/to/apple_push_certificate.pem'
+  c.option '-c', '--certificate CERTIFICATE', 'Path to certificate (.pem) file'
+  c.option '-e', '--environment ENV', [:production, :development], 'Environment to send push notification (production or development (default))'
+  c.option '-p', '--[no]-passphrase', 'Prompt for a certificate passphrase'
+
+  c.action do |args, options|
+
+    @environment = options.environment.downcase.to_sym rescue :development
+    say_error "Invalid environment,'#{@environment}' (should be either :development or :production)" and abort unless [:development, :production].include?(@environment)
+
+    @certificate = options.certificate
+    say_error "Missing certificate file option (-c /path/to/certificate.pem)" and abort unless @certificate
+    say_error "Could not find certificate file '#{@certificate}'" and abort unless File.exists?(@certificate)
+
+    @passphrase = options.passphrase ? password : ""
+
+    client = (@environment == :production) ? Houston::Client.production : Houston::Client.development
+    client.certificate = File.read(@certificate)
+    client.passphrase = @passphrase
+
+    begin
+      feedbackDevices = client.unregistered_devices
+
+      if feedbackDevices.any? && feedbackDevices.length > 0
+        puts feedbackDevices.to_json
+      else
+        say_ok "No feedback available"
+      end
+
+    rescue => message
+      say_error "Exception querying feedback: #{message}" and abort
+    end
+
+  end
+end
