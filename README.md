@@ -139,13 +139,9 @@ Now covert the p12 file to a pem file:
 
     $ openssl pkcs12 -in cert.p12 -out apple_push_notification.pem -nodes -clcerts
 
-## Contact
+## Creator
 
-Mattt Thompson
-
-- http://github.com/mattt
-- http://twitter.com/mattt
-- m@mattt.me
+Mattt Thompson ([@mattt](https://twitter.com/mattt))
 
 ## License
 
