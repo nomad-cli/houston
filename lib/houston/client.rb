@@ -1,3 +1,5 @@
+require 'logger'
+
 module Houston
   APPLE_PRODUCTION_GATEWAY_URI = "apn://gateway.push.apple.com:2195"
   APPLE_PRODUCTION_FEEDBACK_URI = "apn://feedback.push.apple.com:2196"
@@ -39,6 +41,7 @@ module Houston
 
       Connection.open(@gateway_uri, @certificate, @passphrase) do |connection|
         ssl = connection.ssl
+        last_time = Time.now
 
         notifications.each_with_index do |notification, index|
           next unless notification.kind_of?(Notification)
@@ -49,17 +52,26 @@ module Houston
 
           connection.write(notification.message)
           notification.mark_as_sent!
+          logger = Logger.new("houston_test.log", 'daily')
+          logger.info("sent_at:#{Time.now.to_s}, diff: #{Time.now - last_time}")
+          last_time = Time.now
 
-          read_socket, write_socket = IO.select([ssl], [ssl], [ssl], nil)
+          read_socket, write_socket, errors = IO.select([ssl], [], [ssl], 0.1)
           if (read_socket && read_socket[0])
             if error = connection.read(6)
               command, status, index = error.unpack("ccN")
               notification.apns_error_code = status
               notification.mark_as_unsent!
+              logger = Logger.new("houston_test.log", 'daily')
+              logger.error("error_at:#{Time.now.to_s}, diff: #{Time.now - last_time}, error_code: #{status}, device_token: #{notification.token}")
+              last_time = Time.now
+              return index
             end
           end
         end
       end
+
+      -1
     end
 
     def unregistered_devices

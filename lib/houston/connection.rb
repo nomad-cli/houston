@@ -33,6 +33,9 @@ module Houston
     def open
       return false if open?
 
+      logger = Logger.new("houston_test.log", 'daily')
+      logger.info("new connection oppened at: #{Time.now.to_s}")
+
       @socket = TCPSocket.new(@uri.host, @uri.port)
 
       context = OpenSSL::SSL::SSLContext.new
