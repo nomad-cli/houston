@@ -38,40 +38,64 @@ module Houston
       return if notifications.empty?
 
       notifications.flatten!
+      failed_notifications = []
 
       Connection.open(@gateway_uri, @certificate, @passphrase) do |connection|
         ssl = connection.ssl
-        last_time = Time.now
 
-        notifications.each_with_index do |notification, index|
-          next unless notification.kind_of?(Notification)
-          next if notification.sent?
-          next unless notification.valid?
+        error_index = -1
+        mutex = Mutex.new
+        Thread.abort_on_exception=true
 
-          notification.id = index
-
-          connection.write(notification.message)
-          notification.mark_as_sent!
-          logger = Logger.new("houston_test.log", 'daily')
-          logger.info("sent_at:#{Time.now.to_s}, diff: #{Time.now - last_time}")
-          last_time = Time.now
-
-          read_socket, write_socket, errors = IO.select([ssl], [], [ssl], 0.1)
+        read_thread = Thread.new do
+          read_socket, write_socket, errors = IO.select([ssl], [], [ssl], nil)
           if (read_socket && read_socket[0])
             if error = connection.read(6)
               command, status, index = error.unpack("ccN")
-              notification.apns_error_code = status
-              notification.mark_as_unsent!
               logger = Logger.new("houston_test.log", 'daily')
-              logger.error("error_at:#{Time.now.to_s}, diff: #{Time.now - last_time}, error_code: #{status}, device_token: #{notification.token}")
-              last_time = Time.now
-              return index
+              logger.error("error_at:#{Time.now.to_s}, error_code: #{status}, index_error: #{index}")
+              mutex.synchronize do
+                error_index = index
+                notifications[error_index].apns_error_code = status
+                failed_notifications << notifications[error_index]
+              end
             end
           end
         end
-      end
 
-      -1
+        write_thread = Thread.new do
+          notifications.each_with_index do |notification, index|
+            last_time = Time.now
+            next unless notification.kind_of?(Notification)
+            next if notification.sent?
+            next unless notification.valid?
+            mutex.synchronize do
+              if error_index > -1
+                connection.close
+                Thread.exit
+              end
+            end
+            notification.id = index
+            connection.write(notification.message)
+            notification.mark_as_sent!
+            logger = Logger.new("houston_test.log", 'daily')
+            logger.info("sent_at:#{Time.now.to_s}, diff: #{Time.now - last_time}, token: #{notification.token}")
+          end
+          # sleep in order to receive last errors from apple in read thread
+          sleep(5)
+        end
+
+        write_thread.join
+        read_thread.exit
+
+        # start over with remaining notifications
+        if error_index > -1 && error_index < notifications.size - 1
+          notifications.shift(error_index + 1)
+          notifications.each{|n|n.mark_as_unsent!}
+          push(notifications)
+        end
+      end
+      failed_notifications
     end
 
     def unregistered_devices
