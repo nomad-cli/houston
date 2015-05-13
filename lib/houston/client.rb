@@ -92,7 +92,9 @@ module Houston
         if error_index > -1 && error_index < notifications.size - 1
           notifications.shift(error_index + 1)
           notifications.each{|n|n.mark_as_unsent!}
-          push(notifications)
+          connection = Houston::Connection.new(@gateway_uri, @certificate, @passphrase)
+          connection.open
+          redo
         end
       end
       failed_notifications
