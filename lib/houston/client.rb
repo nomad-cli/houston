@@ -65,21 +65,29 @@ module Houston
 
         write_thread = Thread.new do
           notifications.each_with_index do |notification, index|
-            last_time = Time.now
-            next unless notification.kind_of?(Notification)
-            next if notification.sent?
-            next unless notification.valid?
-            mutex.synchronize do
-              if error_index > -1
-                connection.close
-                Thread.exit
+            begin
+              last_time = Time.now
+              next unless notification.kind_of?(Notification)
+              next if notification.sent?
+              next unless notification.valid?
+              mutex.synchronize do
+                if error_index > -1
+                  connection.close
+                  Thread.exit
+                end
               end
+              notification.id = index
+              connection.write(notification.message)
+              notification.mark_as_sent!
+              logger = Logger.new("houston_test.log", 'daily')
+              logger.info("sent_at:#{Time.now.to_s}, diff: #{Time.now - last_time}, token: #{notification.token}")
+            rescue Errno::EPIPE
+              logger = Logger.new("houston_test.log", 'daily')
+              logger.info("broken pipe, token: #{notification.token}")
+              connection = Houston::Connection.new(@gateway_uri, @certificate, @passphrase)
+              connection.open
+              next
             end
-            notification.id = index
-            connection.write(notification.message)
-            notification.mark_as_sent!
-            logger = Logger.new("houston_test.log", 'daily')
-            logger.info("sent_at:#{Time.now.to_s}, diff: #{Time.now - last_time}, token: #{notification.token}")
           end
           # sleep in order to receive last errors from apple in read thread
           sleep(5)
