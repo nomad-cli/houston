@@ -85,12 +85,13 @@ module Houston
               notification.mark_as_sent!
               logger = Logger.new("houston_test.log", 'daily')
               logger.info("sent_at:#{Time.now.to_s}, diff: #{Time.now - last_time}, token: #{notification.token}")
-            rescue Errno::EPIPE
+            rescue => error
               logger = Logger.new("houston_test.log", 'daily')
-              logger.info("broken pipe, token: #{notification.token}")
-              connection = Houston::Connection.new(@gateway_uri, @certificate, @passphrase)
-              connection.open
-              next
+              logger.error("#{error.inspect}, token: #{notification.token}")
+              temp_connection = Houston::Connection.new(@gateway_uri, @certificate, @passphrase)
+              temp_connection.open
+              connection = temp_connection
+              redo
             end
           end
           # sleep in order to receive last errors from apple in read thread
@@ -104,8 +105,9 @@ module Houston
         if error_index > -1 && error_index < notifications.size - 1
           notifications.shift(error_index + 1)
           notifications.each{|n|n.mark_as_unsent!}
-          connection = Houston::Connection.new(@gateway_uri, @certificate, @passphrase)
-          connection.open
+          temp_connection = Houston::Connection.new(@gateway_uri, @certificate, @passphrase)
+          temp_connection.open
+          connection = temp_connection
           redo
         end
       end
