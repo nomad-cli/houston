@@ -88,10 +88,9 @@ module Houston
             rescue => error
               logger = Logger.new("houston_test.log", 'daily')
               logger.error("#{error.inspect}, token: #{notification.token}")
-              temp_connection = Houston::Connection.new(@gateway_uri, @certificate, @passphrase)
-              temp_connection.open
-              connection = temp_connection
-              redo
+              mutex.synchronize do
+                error_index = index - 1
+              end
             end
           end
           # sleep in order to receive last errors from apple in read thread
