@@ -48,19 +48,23 @@ module Houston
         Thread.abort_on_exception=true
 
         read_thread = Thread.new do
-          read_socket, write_socket, errors = IO.select([ssl], [], [ssl], nil)
-          if (read_socket && read_socket[0])
-            if error = connection.read(6)
-              command, status, index = error.unpack("ccN")
-              logger = Logger.new("houston_test.log", 'daily')
-              logger.error("error_at:#{Time.now.to_s}, error_code: #{status}, index_error: #{index}")
-              mutex.synchronize do
-                error_index = index
-                notifications[error_index].apns_error_code = status
-                failed_notifications << notifications[error_index]
-              end
-            end
-          end
+         begin
+           read_socket, write_socket, errors = IO.select([ssl], [], [ssl], nil)
+           if (read_socket && read_socket[0])
+             if error = connection.read(6)
+               command, status, index = error.unpack("ccN")
+               logger = Logger.new("houston_test.log", 'daily')
+               logger.error("error_at:#{Time.now.to_s}, error_code: #{status}, index_error: #{index}")
+               mutex.synchronize do
+                 error_index = index
+                 notifications[error_index].apns_error_code = status
+                 failed_notifications << notifications[error_index]
+               end
+             end
+           end
+         rescue
+           redo
+         end
         end
 
         write_thread = Thread.new do
