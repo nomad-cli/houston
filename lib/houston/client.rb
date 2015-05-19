@@ -88,9 +88,9 @@ module Houston
             rescue => error
               logger = Logger.new("houston_test.log", 'daily')
               logger.error("#{error.inspect}, token: #{notification.token}")
-              temp_connection = Houston::Connection.new(@gateway_uri, @certificate, @passphrase)
-              temp_connection.open
-              connection = temp_connection
+              mutex.synchronize do
+                error_index = :general_error
+              end
               redo
             end
           end
@@ -105,6 +105,11 @@ module Houston
         if error_index > -1 && error_index < notifications.size - 1
           notifications.shift(error_index + 1)
           notifications.each{|n|n.mark_as_unsent!}
+          temp_connection = Houston::Connection.new(@gateway_uri, @certificate, @passphrase)
+          temp_connection.open
+          connection = temp_connection
+          redo
+        elsif error_index == :general_error
           temp_connection = Houston::Connection.new(@gateway_uri, @certificate, @passphrase)
           temp_connection.open
           connection = temp_connection
