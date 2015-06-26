@@ -56,6 +56,7 @@ module Houston
               command, status, index = error.unpack("ccN")
               notification.apns_error_code = status
               notification.mark_as_unsent!
+              push(notifications[notification.id + 1..-1])
             end
           end
         end
