@@ -27,7 +27,7 @@ module Houston
     def initialize
       @gateway_uri = ENV['APN_GATEWAY_URI']
       @feedback_uri = ENV['APN_FEEDBACK_URI']
-      @certificate = File.read(ENV['APN_CERTIFICATE']) if ENV['APN_CERTIFICATE']
+      @certificate = certificate_data
       @passphrase = ENV['APN_CERTIFICATE_PASSPHRASE']
       @timeout = Float(ENV['APN_TIMEOUT'] || 0.5)
     end
@@ -79,6 +79,17 @@ module Houston
 
     def devices
       unregistered_devices.collect{|device| device[:token]}
+    end
+
+    def certificate_data
+      return unless ENV['APN_CERTIFICATE']
+      if File.exist?(ENV['APN_CERTIFICATE'])
+        File.read(ENV['APN_CERTIFICATE'])
+      else
+        # Fallback and return the certificate itself; if it isn't readable, the
+        #   env var is likely the whole string version of the cert's `.pem`.
+        ENV['APN_CERTIFICATE']
+      end
     end
   end
 end
