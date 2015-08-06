@@ -82,13 +82,10 @@ module Houston
     end
 
     def certificate_data
-      return unless ENV['APN_CERTIFICATE']
-      if File.exist?(ENV['APN_CERTIFICATE'])
+      if ENV['APN_CERTIFICATE']
         File.read(ENV['APN_CERTIFICATE'])
-      else
-        # Fallback and return the certificate itself; if it isn't readable, the
-        #   env var is likely the whole string version of the cert's `.pem`.
-        ENV['APN_CERTIFICATE']
+      elsif ENV['APN_CERTIFICATE_DATA']
+        ENV['APN_CERTIFICATE_DATA']
       end
     end
   end
