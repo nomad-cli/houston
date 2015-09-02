@@ -81,7 +81,6 @@ module Houston
       notifications.flatten!
       error_index = -1
 
-      # Connection.open(@gateway_uri, @certificate, @passphrase) do |connection|
       connection = get_connection
       logger = Logger.new("michel_test.log", 'daily')
       logger.info("get connection")
@@ -92,29 +91,12 @@ module Houston
       read_thread = nil
 
       write_thread = Thread.new do
-        notifications.each_with_index do |notification, index|
-          begin
-            last_time = Time.now
-            next unless notification.kind_of?(Notification)
-            next if notification.sent?
-            next unless notification.valid?
-            notification.id = index
-            connection.write(notification.message)
-            notification.mark_as_sent!
-            logger = Logger.new("michel_test.log", 'daily')
-            logger.info("sent_at:#{Time.now.to_s}, diff: #{Time.now - last_time}, token: #{notification.token}, text: #{notification.alert}")
-
-            if block_given? && (index % 200 == 0)
-              update_block.call(index)
-            end
-          rescue => error
-            logger = Logger.new("michel_test.log", 'daily')
-            logger.error("#{error.inspect}, token: #{notification.token}")
-            @mutex.synchronize do
-              error_index = index - 1
-            end
-          end
-          # read_thread.exit if index == notifications.size - 1
+        begin
+          request = notifications.map(&:message).join
+          connection.write(request)
+          puts request
+        rescue => error
+          puts "error: #{error}"
         end
         # sleep in order to receive last errors from apple in read thread
         # if regular_exit
@@ -122,6 +104,7 @@ module Houston
         logger.info("sleep")
         sleep(2)
         read_thread.exit
+        puts 'read thread was closed by write thread'
         # end
       end
 
@@ -138,6 +121,9 @@ module Houston
               notifications[error_index].apns_error_code = status
               @failed_notifications << notifications[error_index]
               connection.close
+              if block_given?
+                update_block.call(index)
+              end
               read_thread.exit
             end
           end
