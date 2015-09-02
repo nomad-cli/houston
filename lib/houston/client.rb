@@ -52,6 +52,7 @@ module Houston
       beginning = Time.now
 
       notifications.flatten!
+      notifications.each_with_index{|notification, index| notification.id = index}
       error_index = send_notifications(notifications, &update_block)
       while error_index > -1
         notifications.shift(error_index + 1)
@@ -93,8 +94,8 @@ module Houston
       write_thread = Thread.new do
         begin
           request = notifications.map(&:message).join
-          connection.write(request)
           puts request
+          connection.write(request)
         rescue => error
           puts "error: #{error}"
         end
