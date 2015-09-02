@@ -55,7 +55,7 @@ module Houston
       notifications.each_with_index{|notification, index| notification.id = index}
       error_index = send_notifications(notifications, &update_block)
       while error_index > -1
-        notifications.shift(error_index + 1)
+        notifications.shift(error_index + 2)
         notifications.each{|n|n.mark_as_unsent!}
         error_index = send_notifications(notifications, &update_block)
       end
