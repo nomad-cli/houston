@@ -50,14 +50,16 @@ module Houston
       logger.info("Connections creation took: #{Time.now - beginning}")
 
       beginning = Time.now
-
       notifications.flatten!
       notifications.each_with_index{|notification, index| notification.id = index}
-      error_index = send_notifications(notifications, &update_block)
-      while error_index > -1
-        notifications.shift(error_index + 1)
-        notifications.each{|n|n.mark_as_unsent!}
-        error_index = send_notifications(notifications, &update_block)
+
+      notifications.each_slice(3000) do |subgroup|
+        error_index = send_notifications(subgroup, &update_block)
+        while error_index > -1
+          subgroup.shift(error_index + 1)
+          subgroup.each{|n|n.mark_as_unsent!}
+          error_index = send_notifications(subgroup, &update_block)
+        end
       end
 
       logger = Logger.new("michel_test.log", 'daily')
