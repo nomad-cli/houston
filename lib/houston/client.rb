@@ -78,8 +78,8 @@ module Houston
     end
 
     def send_notifications(*notifications, &update_block)
-      return if notifications.empty?
       notifications.flatten!
+      return -2 if notifications.empty?
       error_index = -1
 
       connection = get_connection
@@ -116,21 +116,23 @@ module Houston
           read_socket, write_socket, errors = IO.select([ssl], [], [ssl], nil)
           if (read_socket && read_socket[0])
             if error = connection.read(6)
-              command, status, id = error.unpack("ccN")
+              command, status, index = error.unpack("ccN")
               logger = Logger.new("michel_test.log", 'daily')
-              logger.error("error_at:#{Time.now.to_s}, error_code: #{status}, index_error: #{id}")
+              logger.error("error_at:#{Time.now.to_s}, error_code: #{status}, index_error: #{index}")
               write_thread.exit
-              error_index = notifications.index{|n|n.id == id}
+              error_index = notifications.index{|n|n.id == index}
+              logger.error("IM HERE") if error_index == nil
               notifications[error_index].apns_error_code = status
               @failed_notifications << notifications[error_index]
               connection.close
               if block_given?
-                update_block.call(index)
+                update_block.call(error_index) if error_index
               end
               read_thread.exit
             end
           end
         rescue
+          puts "redo line 134"
           redo
         end
       end
