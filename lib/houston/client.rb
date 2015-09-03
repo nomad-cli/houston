@@ -55,7 +55,7 @@ module Houston
       notifications.each_with_index{|notification, index| notification.id = index}
       error_index = send_notifications(notifications, &update_block)
       while error_index > -1
-        notifications.shift(error_index + 2)
+        notifications.shift(error_index + 1)
         notifications.each{|n|n.mark_as_unsent!}
         error_index = send_notifications(notifications, &update_block)
       end
@@ -85,6 +85,7 @@ module Houston
       connection = get_connection
       logger = Logger.new("michel_test.log", 'daily')
       logger.info("get connection")
+      logger.info("stating at index: #{notifications[0].id}")
 
       ssl = connection.ssl
 
@@ -97,7 +98,8 @@ module Houston
           puts request
           connection.write(request)
         rescue => error
-          puts "error: #{error}"
+          logger = Logger.new("michel_test.log", 'daily')
+          logger.error(error)
         end
         # sleep in order to receive last errors from apple in read thread
         # if regular_exit
@@ -114,11 +116,11 @@ module Houston
           read_socket, write_socket, errors = IO.select([ssl], [], [ssl], nil)
           if (read_socket && read_socket[0])
             if error = connection.read(6)
-              command, status, index = error.unpack("ccN")
+              command, status, id = error.unpack("ccN")
               logger = Logger.new("michel_test.log", 'daily')
-              logger.error("error_at:#{Time.now.to_s}, error_code: #{status}, index_error: #{index}")
+              logger.error("error_at:#{Time.now.to_s}, error_code: #{status}, index_error: #{id}")
               write_thread.exit
-              error_index = index
+              error_index = notifications.index{|n|n.id == id}
               notifications[error_index].apns_error_code = status
               @failed_notifications << notifications[error_index]
               connection.close
