@@ -119,11 +119,11 @@ module Houston
           if (read_socket && read_socket[0])
             if error = connection.read(6)
               command, status, index = error.unpack("ccN")
-              logger = Logger.new("michel_test.log", 'daily')
-              logger.error("error_at:#{Time.now.to_s}, error_code: #{status}, index_error: #{index}")
-              write_thread.exit
               error_index = notifications.index{|n|n.id == index}
               logger.error("IM HERE") if error_index == nil
+              logger = Logger.new("michel_test.log", 'daily')
+              logger.error("error_at:#{Time.now.to_s}, error_code: #{status}, index_error: #{index}, token: #{notifications[error_index].token}")
+              write_thread.exit
               notifications[error_index].apns_error_code = status
               @failed_notifications << notifications[error_index]
               connection.close
