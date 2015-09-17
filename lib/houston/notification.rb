@@ -85,7 +85,7 @@ module Houston
     end
 
     def valid?
-      payload.to_json.bytesize <= MAXIMUM_PAYLOAD_SIZE
+      @token && !@token.empty? && payload.to_json.bytesize <= MAXIMUM_PAYLOAD_SIZE
     end
 
     def error
