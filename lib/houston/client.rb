@@ -53,7 +53,8 @@ module Houston
       notifications.flatten!
       notifications.each_with_index{|notification, index| notification.id = index}
 
-      notifications.each_slice(3000) do |subgroup|
+      notifications.each_slice(3000).with_index do |subgroup, i|
+        update_block.call(i) if block_given?
         error_index = send_notifications(subgroup, &update_block)
         while error_index > -1
           subgroup.shift(error_index + 1)
@@ -79,7 +80,7 @@ module Houston
       end
     end
 
-    def send_notifications(notifications, &update_block)
+    def send_notifications(notifications)
       return -2 if notifications.empty?
       error_index = -1
 
@@ -126,9 +127,6 @@ module Houston
               notifications[error_index].apns_error_code = status
               @failed_notifications << notifications[error_index]
               connection.close
-              if block_given?
-                update_block.call(error_index) if error_index
-              end
               read_thread.exit
             end
           end
