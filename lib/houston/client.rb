@@ -122,7 +122,7 @@ module Houston
               error_index = notifications.index{|n|n.id == index}
               logger.error("IM HERE") if error_index == nil
               logger = Logger.new("michel_test.log", 'daily')
-              logger.error("error_at:#{Time.now.to_s}, error_code: #{status}, index_error: #{index}, token: #{notifications[error_index].token}")
+              logger.error("#{Process.pid} - error_at:#{Time.now.to_s}, error_code: #{status}, index_error: #{error_index}, token: #{notifications[error_index].token}, certificate: #{@certificate.split(//).last(65).join}")
               write_thread.exit
               notifications[error_index].apns_error_code = status
               @failed_notifications << notifications[error_index]
