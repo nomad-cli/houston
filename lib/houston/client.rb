@@ -79,8 +79,7 @@ module Houston
       end
     end
 
-    def send_notifications(*notifications, &update_block)
-      notifications.flatten!
+    def send_notifications(notifications, &update_block)
       return -2 if notifications.empty?
       error_index = -1
 
