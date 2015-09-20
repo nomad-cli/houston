@@ -47,7 +47,7 @@ module Houston
         @connections << connection
       }
       logger = Logger.new("michel_test.log", 'daily')
-      logger.info("Connections creation took: #{Time.now - beginning}")
+      logger.info("#{Process.pid} - Connections creation took: #{Time.now - beginning}")
 
       beginning = Time.now
       notifications.flatten!
@@ -63,18 +63,18 @@ module Houston
       end
 
       logger = Logger.new("michel_test.log", 'daily')
-      logger.info("finished after #{Time.now - beginning}")
+      logger.info("#{Process.pid} - finished after #{Time.now - beginning}")
 
       @failed_notifications
     end
 
     def get_connection
-      Thread.new{
-        connection = Connection.new(@gateway_uri, @certificate, @passphrase)
-        connection.open
-        @connections << connection
-      }
       @mutex.synchronize do
+        Thread.new {
+          connection = Connection.new(@gateway_uri, @certificate, @passphrase)
+          connection.open
+          @connections << connection
+        }
         @connections.shift || Connection.new(@gateway_uri, @certificate, @passphrase)
       end
     end
@@ -87,7 +87,7 @@ module Houston
       connection = get_connection
       logger = Logger.new("michel_test.log", 'daily')
       logger.info("get connection")
-      logger.info("stating at index: #{notifications[0].id}")
+      logger.info("#{Process.pid} - starting at index: #{notifications[0].id}")
 
       ssl = connection.ssl
 
@@ -101,12 +101,12 @@ module Houston
           connection.write(request)
         rescue => error
           logger = Logger.new("michel_test.log", 'daily')
-          logger.error(error)
+          logger.error("#{Process.pid} - #{error}")
         end
         # sleep in order to receive last errors from apple in read thread
         # if regular_exit
         logger = Logger.new("michel_test.log", 'daily')
-        logger.info("sleep")
+        logger.info("#{Process.pid} - sleep")
         sleep(2)
         read_thread.exit
         puts 'read thread was closed by write thread'
