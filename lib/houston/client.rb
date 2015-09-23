@@ -30,110 +30,147 @@ module Houston
       @gateway_uri = ENV['APN_GATEWAY_URI']
       @feedback_uri = ENV['APN_FEEDBACK_URI']
       @certificate = File.read(ENV['APN_CERTIFICATE']) if ENV['APN_CERTIFICATE']
+      @certificate_for_log = @certificate.split(//).last(65).join
       @passphrase = ENV['APN_CERTIFICATE_PASSPHRASE']
       @timeout = Float(ENV['APN_TIMEOUT'] || 0.5)
+      @pid = Process.pid
+      @logger = Logger.new("log/houston_test_#{Time.now.strftime('%Y%m%d')}.log")
+      @logger.datetime_format = Time.now.strftime "%Y-%m-%dT%H:%M:%S"
+      @logger.formatter = proc do |severity, datetime, progname, msg|
+        "#{@pid}: #{datetime} #{severity}: #{msg}\n"
+      end
+      @connections = []
     end
 
-    def push(*notifications, &update_block)
+    def push(notifications)
       @mutex = Mutex.new
       @failed_notifications = []
 
       beginning = Time.now
 
-      @connections = []
-      10.times{
+      5.times{ add_connection }
+      @logger.info("Connections creation took: #{Time.now - beginning}")
+
+      beginning = Time.now
+      notifications.each_with_index{|notification, index| notification.id = index}
+
+      finished_count = 0
+      notifications.each_slice(3000) do |batch|
+        loop do
+          error_index = send_batch(batch)
+          break if error_index < 0
+
+          batch.shift(error_index + 1)
+        end
+
+        finished_count += batch.size
+        yield finished_count
+      end
+
+      @logger.info("Finished after #{Time.now - beginning}")
+
+      @failed_notifications
+    ensure
+      @mutex.synchronize do
+        @connections.each{|con| con.close } #close whole connection pool
+      end
+    end
+
+    def add_connection
+      @mutex.synchronize do
         connection = Connection.new(@gateway_uri, @certificate, @passphrase)
         connection.open
         @connections << connection
-      }
-      logger = Logger.new("michel_test.log", 'daily')
-      logger.info("#{Process.pid} - Connections creation took: #{Time.now - beginning}")
-
-      beginning = Time.now
-      notifications.flatten!
-      notifications.each_with_index{|notification, index| notification.id = index}
-
-      notifications.each_slice(3000).with_index do |subgroup, i|
-        update_block.call(i) if block_given?
-        error_index = send_notifications(subgroup, &update_block)
-        while error_index > -1
-          subgroup.shift(error_index + 1)
-          subgroup.each{|n|n.mark_as_unsent!}
-          error_index = send_notifications(subgroup, &update_block)
-        end
       end
-
-      logger = Logger.new("michel_test.log", 'daily')
-      logger.info("#{Process.pid} - finished after #{Time.now - beginning}")
-
-      @failed_notifications
     end
 
     def get_connection
-      @mutex.synchronize do
-        Thread.new {
-          connection = Connection.new(@gateway_uri, @certificate, @passphrase)
-          connection.open
-          @connections << connection
-        }
-        @connections.shift || Connection.new(@gateway_uri, @certificate, @passphrase)
+      add_connection if @connections.empty? #connections were requested too frequently, add another one
+      con = @connections.shift
+
+      Thread.new{ add_connection }
+
+      con
+    end
+
+    def log_exception!(e, where)
+      if defined?(Rollbar) && (@last_error_type != e.class || @last_error_message != e.message)
+        Rollbar.error(e)
+        @last_error_type, @last_error_message = e.class, e.message
+      end
+
+      @logger.error "* #{e.class.name} on #{where}: #{e.message}\n" + e.backtrace[0,5].join("\n")
+      nil
+    end
+
+    def write_notifications(notifications)
+      alerted_error_types = {}
+      messages = notifications.map do |noti|
+        begin
+          noti.message
+        rescue => e
+          log_exception!(e, "create notification message")
+        end
+      end
+
+      request = messages.compact.join
+      connection.write(request)
+    rescue => e
+      log_exception!(e, "write")
+    end
+
+    def read_errors(connection, notifications, already_tried = false)
+      error = connection.read(6) #returns nil on EOF at start
+      return -1 if !error #ok
+
+      command, error_code, error_noti_id = error.unpack("ccN")
+      error_index = notifications.index{|n| n.id == error_noti_id }
+      error_noti = notifications[error_index] if error_index
+      if error_noti
+        @logger.error("Error_code: #{error_code}, id: #{error_noti.id}, index: #{error_index}, token: #{error_noti.token}, certificate: #{@certificate_for_log}")
+        error_noti.apns_error_code = error_code
+        @failed_notifications << error_noti
+        error_index
+      else
+        @logger.error("Invalid notification ID in error")
+        -3 #since we don't know in which notification was error, we'll skip whole batch as if it was ok
+      end
+    rescue => e #TODO: create statistics of errors, maybe should be different handling of different types
+      log_exception!(e, "read")
+      if already_tried
+        @logger.error "Second read failure - closing!"
+        -4
+      else
+        @logger.info "Retrying after 1 second..."
+        sleep 1
+        read_errors connection, notifications, true
       end
     end
 
-    def send_notifications(notifications)
+    def send_batch(notifications)
       return -2 if notifications.empty?
       error_index = -1
 
       connection = get_connection
-      logger = Logger.new("michel_test.log", 'daily')
-      logger.info("get connection")
-      logger.info("#{Process.pid} - starting at index: #{notifications[0].id}")
-
-      ssl = connection.ssl
+      @logger.info("get connection, starting at index: #{notifications[0].id}")
 
       Thread.abort_on_exception=true
       read_thread = nil
 
       write_thread = Thread.new do
-        begin
-          request = notifications.map(&:message).join
-          puts request
-          connection.write(request)
-        rescue => error
-          logger = Logger.new("michel_test.log", 'daily')
-          logger.error("#{Process.pid} - #{error}")
-        end
+        write_notifications notifications
+
         # sleep in order to receive last errors from apple in read thread
-        # if regular_exit
-        logger = Logger.new("michel_test.log", 'daily')
-        logger.info("#{Process.pid} - sleep")
+        @logger.info("end of write sleep 2 seconds")
         sleep(2)
+        
         read_thread.exit
-        puts 'read thread was closed by write thread'
-        # end
+        @logger.info("write finished, read closed")
       end
 
       read_thread = Thread.new do
-        begin
-          read_socket, write_socket, errors = IO.select([ssl], [], [ssl], nil)
-          if (read_socket && read_socket[0])
-            if error = connection.read(6)
-              command, status, index = error.unpack("ccN")
-              error_index = notifications.index{|n|n.id == index}
-              logger.error("IM HERE") if error_index == nil
-              logger = Logger.new("michel_test.log", 'daily')
-              logger.error("#{Process.pid} - error_at:#{Time.now.to_s}, error_code: #{status}, index_error: #{error_index}, token: #{notifications[error_index].token}, certificate: #{@certificate.split(//).last(65).join}")
-              write_thread.exit
-              notifications[error_index].apns_error_code = status
-              @failed_notifications << notifications[error_index]
-              connection.close
-              read_thread.exit
-            end
-          end
-        rescue
-          puts "redo line 134"
-          redo
-        end
+        error_index = read_errors connection, notifications
+        write_thread.exit
       end
 
       read_thread.join
