@@ -104,7 +104,6 @@ module Houston
     end
 
     def write_notifications(notifications)
-      alerted_error_types = {}
       messages = notifications.map do |noti|
         begin
           noti.message
