@@ -26,6 +26,11 @@ module Houston
       end
     end
 
+    #registers exception handler. upon uncaught exceptions the block will be called with exception object as argument
+    def capture_exceptions &block
+      @exception_handler = block
+    end
+
     def initialize
       @gateway_uri = ENV['APN_GATEWAY_URI']
       @feedback_uri = ENV['APN_FEEDBACK_URI']
@@ -104,11 +109,7 @@ module Houston
     end
 
     def log_exception!(e, where)
-      if defined?(Rollbar) && (@last_error_type != e.class || @last_error_message != e.message)
-        Rollbar.error(e)
-        @last_error_type, @last_error_message = e.class, e.message
-      end
-
+      @exception_handler.call(e) if @exception_handler
       @logger.error "* #{e.class.name} on #{where}: #{e.message}\n" + e.backtrace[0,5].join("\n")
       nil
     end
