@@ -40,6 +40,14 @@ module Houston
         "#{@pid}: #{datetime} #{severity}: #{msg}\n"
       end
       @connections = []
+      @measures = {}
+    end
+
+    def measure type
+      t = Time.now
+      res = yield
+      @measures[type] = (@measures[type] || 0) + (Time.now - t)
+      res
     end
 
     def push(notifications)
@@ -55,7 +63,8 @@ module Houston
       notifications.each_with_index{|notification, index| notification.id = index}
 
       finished_count = 0
-      notifications.each_slice(3000) do |batch|
+      notifications.each_slice(200) do |batch|
+        batch_size = batch.size
         loop do
           error_index = send_batch(batch)
           break if error_index < 0
@@ -63,11 +72,12 @@ module Houston
           batch.shift(error_index + 1)
         end
 
-        finished_count += batch.size
+        finished_count += batch_size
         yield finished_count
       end
 
       @logger.info("Finished after #{Time.now - beginning}")
+      @logger.info("Measures: #{@measures.to_json}")
 
       @failed_notifications
     ensure
@@ -103,18 +113,17 @@ module Houston
       nil
     end
 
-    def write_notifications(notifications)
-      alerted_error_types = {}
+    def write_notifications(connection, notifications)
       messages = notifications.map do |noti|
         begin
-          noti.message
+          measure(:message){noti.message}
         rescue => e
           log_exception!(e, "create notification message")
         end
       end
 
       request = messages.compact.join
-      connection.write(request)
+      measure(:write){connection.write(request)}
     rescue => e
       log_exception!(e, "write")
     end
@@ -151,29 +160,34 @@ module Houston
       return -2 if notifications.empty?
       error_index = -1
 
-      connection = get_connection
+      connection = measure(:get_connection){get_connection}
       @logger.info("get connection, starting at index: #{notifications[0].id}")
 
       Thread.abort_on_exception=true
       read_thread = nil
 
       write_thread = Thread.new do
-        write_notifications notifications
+        measure(:write_block){write_notifications(connection, notifications)}
 
         # sleep in order to receive last errors from apple in read thread
         @logger.info("end of write sleep 2 seconds")
-        sleep(2)
+        measure(:sleep){sleep(2)}
         
         read_thread.exit
+        @connections.unshift(connection)
         @logger.info("write finished, read closed")
       end
 
       read_thread = Thread.new do
-        error_index = read_errors connection, notifications
+        error_index = read_errors(connection, notifications)
         write_thread.exit
       end
 
-      read_thread.join
+      begin
+        read_thread.join
+      rescue Exception => e
+        puts e
+      end
 
       # end
       error_index
