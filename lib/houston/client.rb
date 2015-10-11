@@ -30,7 +30,7 @@ module Houston
       @gateway_uri = ENV['APN_GATEWAY_URI']
       @feedback_uri = ENV['APN_FEEDBACK_URI']
       @certificate = File.read(ENV['APN_CERTIFICATE']) if ENV['APN_CERTIFICATE']
-      @certificate_for_log = @certificate.split(//).last(65).join
+      @certificate_for_log = @certificate.split(//).last(65).join if @certificate
       @passphrase = ENV['APN_CERTIFICATE_PASSPHRASE']
       @timeout = Float(ENV['APN_TIMEOUT'] || 0.5)
       @pid = Process.pid
