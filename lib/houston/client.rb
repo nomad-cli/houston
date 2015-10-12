@@ -10,6 +10,14 @@ module Houston
   class Client
     attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase, :timeout
 
+    class ErrorResponse < StandardError
+      attr_reader :index
+      def initialize(index)
+        @index = index
+        super("error response at #{index}")
+      end
+    end
+
     class << self
       def development
         client = self.new
@@ -22,6 +30,13 @@ module Houston
         client = self.new
         client.gateway_uri = APPLE_PRODUCTION_GATEWAY_URI
         client.feedback_uri = APPLE_PRODUCTION_FEEDBACK_URI
+        client
+      end
+
+      def mock
+        client = self.new
+        client.gateway_uri = "apn://127.0.0.1:2195"
+        client.feedback_uri = nil
         client
       end
     end
@@ -50,9 +65,9 @@ module Houston
 
     def measure type
       t = Time.now
-      res = yield
-      @measures[type] = (@measures[type] || 0) + (Time.now - t)
-      res
+      yield
+    ensure
+      @measures[type] = (@measures[type] || 0) + (Time.now - t) #measure even if crushed
     end
 
     def push(notifications)
@@ -67,18 +82,52 @@ module Houston
       beginning = Time.now
       notifications.each_with_index{|notification, index| notification.id = index}
 
-      finished_count = 0
-      notifications.each_slice(200) do |batch|
-        batch_size = batch.size
-        loop do
-          error_index = send_batch(batch)
-          break if error_index < 0
+      sent_count = 0
+      while !notifications.empty?
+        local_start_index = sent_count
+        @logger.info("get connection, starting at index: #{notifications[0].id}")
+        connection = measure(:get_connection){ get_connection }
 
-          batch.shift(error_index + 1)
+        read_thread = Thread.new do
+          puts "start of read thread"
+          error_index = read_errors(connection, notifications)
+          puts "Throwing error at #{error_index}!!!"
+          Thread.main.raise ErrorResponse, error_index if error_index
         end
 
-        finished_count += batch_size
-        yield finished_count
+        last_sent_id, error_index = nil, nil
+        begin
+          notifications.each_slice(10) do |group|
+            last_sent_id = group[-1].id
+            write_notifications(connection, group)
+
+            sent_count += group.size
+            yield sent_count
+          end
+
+          @logger.info("end of write, no errors, sleep 2 seconds")
+          measure(:sleep){ sleep(2) } #sleep in order to receive last errors from apple in read thread
+          puts "end of write, slept full 2 seconds"
+        rescue ErrorResponse => e
+          puts "Got error index: #{e.index}"
+          error_index = e.index
+        rescue => e
+          log_exception!(e, "write")
+          error_index = -1
+        end
+
+        read_thread.exit
+        connection.close
+
+        break if !error_index
+
+        if error_index < 0 #custom errors, restart from next batch
+          error_index = last_sent_id ? notifications.index{|n| n.id == last_sent_id } : 0
+        end
+
+        sent_count = local_start_index + error_index + 1
+        yield sent_count
+        notifications.shift(error_index + 1)
       end
 
       @logger.info("Finished after #{Time.now - beginning}")
@@ -125,13 +174,15 @@ module Houston
 
       request = messages.compact.join
       measure(:write){connection.write(request)}
-    rescue => e
-      log_exception!(e, "write")
+    rescue => e #purpose of this catch is to allow read thread to throw ErrorResponse
+      sleep 5 unless e.is_a? ErrorResponse
+      puts "*** slept 5 seconds because of #{e}"
+      raise
     end
 
     def read_errors(connection, notifications, already_tried = false)
       error = connection.read(6) #returns nil on EOF at start
-      return -1 if !error #ok
+      return nil if !error #ok
 
       command, error_code, error_noti_id = error.unpack("ccN")
       error_index = notifications.index{|n| n.id == error_noti_id }
@@ -155,43 +206,6 @@ module Houston
         sleep 1
         read_errors connection, notifications, true
       end
-    end
-
-    def send_batch(notifications)
-      return -2 if notifications.empty?
-      error_index = -1
-
-      connection = measure(:get_connection){get_connection}
-      @logger.info("get connection, starting at index: #{notifications[0].id}")
-
-      Thread.abort_on_exception=true
-      read_thread = nil
-
-      write_thread = Thread.new do
-        measure(:write_block){write_notifications(connection, notifications)}
-
-        # sleep in order to receive last errors from apple in read thread
-        @logger.info("end of write sleep 2 seconds")
-        measure(:sleep){sleep(2)}
-        
-        read_thread.exit
-        @connections.unshift(connection)
-        @logger.info("write finished, read closed")
-      end
-
-      read_thread = Thread.new do
-        error_index = read_errors(connection, notifications)
-        write_thread.exit
-      end
-
-      begin
-        read_thread.join
-      rescue Exception => e
-        puts e
-      end
-
-      # end
-      error_index
     end
 
     def unregistered_devices
