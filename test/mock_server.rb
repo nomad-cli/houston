@@ -18,9 +18,11 @@ module MockServer
       if res[:token][0, 3] == "bad"
         socket.write([2,8,res[:id]].pack('ccN'))
         puts "#{id}. Bad: #{res[:id]}: #{res[:token]}"
+        @bad_count += 1
         break
       else
         puts "#{id}. Good: #{res[:id]}: #{res[:token]}"
+        @good_count += 1
       end
     end
   ensure
@@ -43,6 +45,7 @@ module MockServer
     cur_id = 0
 
     puts "Started server on #{port}"
+    @good_count = @bad_count = 0
     loop do
       cur_id += 1
       client = sslServer.accept
@@ -51,6 +54,7 @@ module MockServer
   ensure
     threads.each{|t| t.kill }
     server.close
+    puts "Got #{@good_count} good and #{@bad_count} bad notifications, totally #{@good_count+@bad_count}"
   end
 end
 
