@@ -59,7 +59,8 @@ module Houston
       @passphrase = ENV['APN_CERTIFICATE_PASSPHRASE']
       @timeout = Float(ENV['APN_TIMEOUT'] || 0.5)
       @pid = Process.pid
-      @connections = []
+      @connections_queue = Queue.new
+      @connection_threads = []
       @measures = {}
     end
 
@@ -71,7 +72,6 @@ module Houston
     end
 
     def push(notifications, packet_size: 10)
-      @mutex = Mutex.new
       @failed_notifications = []
 
       beginning = Time.now
@@ -85,7 +85,7 @@ module Houston
       sent_count = 0
       while !notifications.empty?
         local_start_index = sent_count
-        logger.info("get connection, starting at index: #{notifications[0].id}")
+        logger.info("Get connection, starting at index: #{notifications[0].id}")
         connection = measure(:get_connection){ get_connection }
 
         last_sent_id = nil
@@ -127,26 +127,20 @@ module Houston
 
       @failed_notifications
     ensure
-      @mutex.synchronize do
-        @connections.each{|con| con.close } #close whole connection pool
-      end
+      threads, @connection_threads = @connection_threads, []
+      threads.each{|t| t.join(5) } #allow started connections to finish opening, shouldn't kill in the middle
+      @connections_queue.pop.close while !@connections_queue.empty? #clean whole pool
     end
 
     def add_connection
-      @mutex.synchronize do
-        connection = Connection.new(@gateway_uri, @certificate, @passphrase)
-        connection.open
-        @connections << connection
-      end
+      connection = Connection.new(@gateway_uri, @certificate, @passphrase)
+      connection.open
+      @connections_queue << connection
     end
 
     def get_connection
-      add_connection if @connections.empty? #connections were requested too frequently, add another one
-      con = @connections.shift
-
-      Thread.new{ add_connection }
-
-      con
+      @connection_threads << Thread.new{ add_connection }
+      @connections_queue.pop #blocking if empty
     end
 
     def log_exception!(e, where)
