@@ -10,14 +10,6 @@ module Houston
   class Client
     attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase, :timeout
 
-    class ErrorResponse < StandardError
-      attr_reader :index
-      def initialize(index)
-        @index = index
-        super("error response at #{index}")
-      end
-    end
-
     class << self
       def development
         client = self.new
