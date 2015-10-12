@@ -108,16 +108,26 @@ module Houston
           logger.info("End of write, closed socket for writing")
         end
 
-        error_index = read_errors(connection, notifications)
-        puts "--- Got error at #{error_index}"
+        error_id = read_errors(connection)
+        puts "--- Got error on #{error_id}"
         write_thread.kill
         connection.close
 
-        break if !error_index
-
-        if error_index < 0 #custom errors, restart from next batch
-          error_index = last_sent_id ? notifications.index{|n| n.id == last_sent_id } : 0
+        #custom error or connection closed before finishing all writes
+        if error_id.is_a?(Exception) || (!error_id && last_sent_id != notifications[-1].id)
+          error_id = last_sent_id || notifications[0].id
         end
+
+        break if !error_id
+
+        error_index = notifications.index{|n| n.id == error_id }
+        if !error_index
+          logger.warn "Invalid error notification id: #{error_id}"
+          break if last_sent_id == notifications[-1].id
+          error_index = notifications.index{|n| n.id == last_sent_id }
+        end
+
+        logger.info "Error index #{error_index}/#{notifications.size}, token '#{notifications[error_index].token}'"
 
         sent_count = local_start_index + error_index + 1
         yield sent_count
@@ -164,25 +174,16 @@ module Houston
       measure(:write){connection.write(request)}
     end
 
-    def read_errors(connection, notifications)
+    def read_errors(connection)
       error = connection.read(6) #returns nil on EOF at start
       return nil if !error #ok
 
       command, error_code, error_noti_id = error.unpack("ccN")
-      error_index = notifications.index{|n| n.id == error_noti_id }
-      error_noti = notifications[error_index] if error_index
-      if error_noti
-        logger.error("Error_code: #{error_code}, id: #{error_noti.id}, index: #{error_index}, token: #{error_noti.token}, certificate: #{@certificate_for_log}")
-        error_noti.apns_error_code = error_code
-        @failed_notifications << error_noti
-        error_index
-      else
-        logger.error("Invalid notification ID in error")
-        -3 #since we don't know in which notification was error, we'll skip whole batch as if it was ok
-      end
+      logger.warn "Error on id #{error_noti_id}, code: #{error_code}"
+      error_noti_id
     rescue => e #TODO: create statistics of errors, maybe should be different handling of different types
       log_exception!(e, "read")
-      -4
+      e
     end
 
     def unregistered_devices
