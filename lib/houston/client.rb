@@ -98,12 +98,14 @@ module Houston
               sent_count += group.size
               yield sent_count
             end
-          rescue => e #purpose of this catch is to allow read thread to throw ErrorResponse
-            log_exception!(e, "write")
+          rescue Errno::EPIPE => e
+            logger.warn "Broken pipe on write, last sent id: #{last_sent_id}"
+          rescue => e
+            log_exception!(e, "write") #swallow any unexpected exceptions
           end
 
-          logger.info("end of write")
           connection.socket.close_write #should send EOF to server making it send EOF back
+          logger.info("End of write, closed socket for writing")
         end
 
         error_index = read_errors(connection, notifications)
