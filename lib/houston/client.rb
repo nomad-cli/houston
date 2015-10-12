@@ -46,6 +46,19 @@ module Houston
       @exception_handler = block
     end
 
+    def logger
+      if !Thread.current[:logger]
+        logger = Logger.new("log/houston_test_#{Time.now.strftime('%Y%m%d')}.log")
+        logger.datetime_format = Time.now.strftime "%Y-%m-%dT%H:%M:%S"
+        logger.formatter = proc do |severity, datetime, progname, msg|
+          "#{@pid}: #{datetime} #{severity}: #{msg}\n"
+        end
+        Thread.current[:logger] = logger
+      else
+        Thread.current[:logger]
+      end
+    end
+
     def initialize
       @gateway_uri = ENV['APN_GATEWAY_URI']
       @feedback_uri = ENV['APN_FEEDBACK_URI']
@@ -54,11 +67,6 @@ module Houston
       @passphrase = ENV['APN_CERTIFICATE_PASSPHRASE']
       @timeout = Float(ENV['APN_TIMEOUT'] || 0.5)
       @pid = Process.pid
-      @logger = Logger.new("log/houston_test_#{Time.now.strftime('%Y%m%d')}.log")
-      @logger.datetime_format = Time.now.strftime "%Y-%m-%dT%H:%M:%S"
-      @logger.formatter = proc do |severity, datetime, progname, msg|
-        "#{@pid}: #{datetime} #{severity}: #{msg}\n"
-      end
       @connections = []
       @measures = {}
     end
@@ -70,14 +78,14 @@ module Houston
       @measures[type] = (@measures[type] || 0) + (Time.now - t) #measure even if crushed
     end
 
-    def push(notifications)
+    def push(notifications, packet_size: 10)
       @mutex = Mutex.new
       @failed_notifications = []
 
       beginning = Time.now
 
       5.times{ add_connection }
-      @logger.info("Connections creation took: #{Time.now - beginning}")
+      logger.info("Connections creation took: #{Time.now - beginning}")
 
       beginning = Time.now
       notifications.each_with_index{|notification, index| notification.id = index}
@@ -85,38 +93,30 @@ module Houston
       sent_count = 0
       while !notifications.empty?
         local_start_index = sent_count
-        @logger.info("get connection, starting at index: #{notifications[0].id}")
+        logger.info("get connection, starting at index: #{notifications[0].id}")
         connection = measure(:get_connection){ get_connection }
 
-        read_thread = Thread.new do
-          puts "start of read thread"
-          error_index = read_errors(connection, notifications)
-          puts "Throwing error at #{error_index}!!!"
-          Thread.main.raise ErrorResponse, error_index if error_index
-        end
+        last_sent_id = nil
+        write_thread = Thread.new(connection, notifications) do |connection, notifications|
+          begin
+            notifications.each_slice(packet_size) do |group|
+              last_sent_id = group[-1].id
+              write_notifications(connection, group)
 
-        last_sent_id, error_index = nil, nil
-        begin
-          notifications.each_slice(10) do |group|
-            last_sent_id = group[-1].id
-            write_notifications(connection, group)
-
-            sent_count += group.size
-            yield sent_count
+              sent_count += group.size
+              yield sent_count
+            end
+          rescue => e #purpose of this catch is to allow read thread to throw ErrorResponse
+            log_exception!(e, "write")
           end
 
-          @logger.info("end of write, no errors, sleep 2 seconds")
-          measure(:sleep){ sleep(2) } #sleep in order to receive last errors from apple in read thread
-          puts "end of write, slept full 2 seconds"
-        rescue ErrorResponse => e
-          puts "Got error index: #{e.index}"
-          error_index = e.index
-        rescue => e
-          log_exception!(e, "write")
-          error_index = -1
+          logger.info("end of write")
+          connection.socket.close_write #should send EOF to server making it send EOF back
         end
 
-        read_thread.exit
+        error_index = read_errors(connection, notifications)
+        puts "--- Got error at #{error_index}"
+        write_thread.kill
         connection.close
 
         break if !error_index
@@ -130,8 +130,8 @@ module Houston
         notifications.shift(error_index + 1)
       end
 
-      @logger.info("Finished after #{Time.now - beginning}")
-      @logger.info("Measures: #{@measures.to_json}")
+      logger.info("Finished after #{Time.now - beginning}")
+      logger.info("Measures: #{@measures.to_json}")
 
       @failed_notifications
     ensure
@@ -159,7 +159,7 @@ module Houston
 
     def log_exception!(e, where)
       @exception_handler.call(e) if @exception_handler
-      @logger.error "* #{e.class.name} on #{where}: #{e.message}\n" + e.backtrace[0,5].join("\n")
+      logger.error "* #{e.class.name} on #{where}: #{e.message}\n" + e.backtrace[0,5].join("\n")
       nil
     end
 
@@ -174,13 +174,9 @@ module Houston
 
       request = messages.compact.join
       measure(:write){connection.write(request)}
-    rescue => e #purpose of this catch is to allow read thread to throw ErrorResponse
-      sleep 5 unless e.is_a? ErrorResponse
-      puts "*** slept 5 seconds because of #{e}"
-      raise
     end
 
-    def read_errors(connection, notifications, already_tried = false)
+    def read_errors(connection, notifications)
       error = connection.read(6) #returns nil on EOF at start
       return nil if !error #ok
 
@@ -188,24 +184,17 @@ module Houston
       error_index = notifications.index{|n| n.id == error_noti_id }
       error_noti = notifications[error_index] if error_index
       if error_noti
-        @logger.error("Error_code: #{error_code}, id: #{error_noti.id}, index: #{error_index}, token: #{error_noti.token}, certificate: #{@certificate_for_log}")
+        logger.error("Error_code: #{error_code}, id: #{error_noti.id}, index: #{error_index}, token: #{error_noti.token}, certificate: #{@certificate_for_log}")
         error_noti.apns_error_code = error_code
         @failed_notifications << error_noti
         error_index
       else
-        @logger.error("Invalid notification ID in error")
+        logger.error("Invalid notification ID in error")
         -3 #since we don't know in which notification was error, we'll skip whole batch as if it was ok
       end
     rescue => e #TODO: create statistics of errors, maybe should be different handling of different types
       log_exception!(e, "read")
-      if already_tried
-        @logger.error "Second read failure - closing!"
-        -4
-      else
-        @logger.info "Retrying after 1 second..."
-        sleep 1
-        read_errors connection, notifications, true
-      end
+      -4
     end
 
     def unregistered_devices
