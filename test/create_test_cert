@@ -1,0 +1,5 @@
+#!/bin/bash
+echo "Generating certificate. Use 'push' as passphrase."
+openssl req -x509 -newkey rsa:2048 -keyout test-priv.pem -out test-cert.pem
+cat test-cert.pem test-priv.pem > test.pem
+rm test-cert.pem test-priv.pem
