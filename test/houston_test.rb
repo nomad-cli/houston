@@ -13,9 +13,9 @@ notification_array = []
 apn.certificate = File.read("test.pem")
 apn.passphrase = "push"
 
-100.times do |i|
+100000.times do |i|
   # Create a notification that alerts a message to the user, plays a sound, and sets the badge on the app
-  token = i%100==5 ? "bad#{i}" : "acc#{i}"
+  token = rand(1000) == 0 ? "bad#{i}" : "acc#{i}"
   notification = Houston::Notification.new(token: token, expiry: 0, priority: 10)
 
   # notification.alert = (0...30).map { ('a'..'z').to_a[rand(10)] }.join
