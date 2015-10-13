@@ -145,7 +145,7 @@ module Houston
       failed_notifications
     ensure
       threads, @connection_threads = @connection_threads, []
-      threads.each{|t| t.join(5) } #allow started connections to finish opening, shouldn't kill in the middle
+      threads.each{|t| t.join(5) || t.kill } #allow started connections to finish opening, but if time passes, kill anyway
       @connections_queue.pop.close while !@connections_queue.empty? #clean whole pool
     end
 
@@ -153,11 +153,15 @@ module Houston
       connection = Connection.new(@gateway_uri, @certificate, @passphrase)
       connection.open
       @connections_queue << connection
+    rescue => e
+      log_exception! e, "add_connection"
+      sleep 1
+      retry
     end
 
     def get_connection
       @connection_threads << Thread.new{ add_connection }
-      @connections_queue.pop #blocking if empty
+      Timeout.timeout(10){ @connections_queue.pop } #blocking if empty, timeout in case all threads are dead or connection stuck while opening
     end
 
     def log_exception!(e, where)
