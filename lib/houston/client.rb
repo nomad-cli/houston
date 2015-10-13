@@ -1,4 +1,5 @@
 require 'logger'
+require 'timeout'
 
 module Houston
   APPLE_PRODUCTION_GATEWAY_URI = "apn://gateway.push.apple.com:2195"
@@ -72,7 +73,7 @@ module Houston
     end
 
     def push(notifications, packet_size: 10)
-      @failed_notifications = []
+      failed_notifications = []
 
       beginning = Time.now
 
@@ -108,7 +109,7 @@ module Houston
           logger.info("End of write, closed socket for writing")
         end
 
-        error_id = read_errors(connection)
+        error_id = error_id_from_read = read_errors(connection)
         puts "--- Got error on #{error_id}"
         write_thread.kill
         connection.close
@@ -124,10 +125,14 @@ module Houston
         if !error_index
           logger.warn "Invalid error notification id: #{error_id}"
           break if last_sent_id == notifications[-1].id
-          error_index = notifications.index{|n| n.id == last_sent_id }
+          error_id = last_sent_id
+          error_index = notifications.index{|n| n.id == error_id }
         end
 
-        logger.info "Error index #{error_index}/#{notifications.size}, token '#{notifications[error_index].token}'"
+        error_notification = notifications[error_index]
+        failed_notifications << error_notification if error_id == error_id_from_read #check that id was received from server
+
+        logger.info "Error index #{error_index}/#{notifications.size}, token '#{error_notification.token}'"
 
         sent_count = local_start_index + error_index + 1
         yield sent_count
@@ -137,7 +142,7 @@ module Houston
       logger.info("Finished after #{Time.now - beginning}")
       logger.info("Measures: #{@measures.to_json}")
 
-      @failed_notifications
+      failed_notifications
     ensure
       threads, @connection_threads = @connection_threads, []
       threads.each{|t| t.join(5) } #allow started connections to finish opening, shouldn't kill in the middle
