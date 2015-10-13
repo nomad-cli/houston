@@ -50,13 +50,14 @@ module Houston
       @connections_queue = Queue.new
       @connection_threads = []
       @measures = {}
+      @main_thread = Thread.current
     end
 
     def measure type
       t = Time.now
       yield
     ensure
-      @measures[type] = (@measures[type] || 0) + (Time.now - t) #measure even if crushed
+      @measures[type] = (@measures[type] || 0) + (Time.now - t) if t #measure even if crushed
     end
 
     def push(notifications, packet_size: 10)
@@ -140,18 +141,28 @@ module Houston
     end
 
     def add_connection
+      retries = 5
       connection = Connection.new(@gateway_uri, @certificate, @passphrase)
-      connection.open
-      @connections_queue << connection
-    rescue => e
-      log_exception! e, "add_connection"
-      sleep 1
-      retry
+      begin
+        connection.open
+        @connections_queue << connection
+      rescue => e
+        log_exception! e, "add_connection"
+        sleep 1
+        retries -= 1
+        retry if retries > 0
+
+        #ok, we're out of reties, pass exception to main thread (but only once!)
+        Thread.exclusive do
+          @main_thread.raise e unless @already_dead
+          @already_dead = true
+        end
+      end
     end
 
     def get_connection
       @connection_threads << Thread.new{ add_connection }
-      Timeout.timeout(10){ @connections_queue.pop } #blocking if empty, timeout in case all threads are dead or connection stuck while opening
+      @connections_queue.pop #blocking if empty
     end
 
     def log_exception!(e, where)

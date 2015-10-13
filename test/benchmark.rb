@@ -32,8 +32,7 @@ num.times do |i|
 end
 
 apn.capture_exceptions do |e|
-  puts "Exception! #{e.class.name}: #{e}"
-  puts e.backtrace[0,10]
+  puts "* Exception! #{e.class.name}: #{e}"
 end
 
 # failed_notifications = Manager.push(APN, notification_array)
