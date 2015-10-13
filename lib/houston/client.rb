@@ -99,7 +99,6 @@ module Houston
         end
 
         error_id = error_id_from_read = read_errors(connection)
-        puts "--- Got error on #{error_id}"
         write_thread.kill
         connection.close
 
