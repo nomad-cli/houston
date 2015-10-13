@@ -21,8 +21,6 @@ num.times do |i|
   token = rand(freq) == 0 ? "bad#{i}" : "acc#{i}"
   notification = Houston::Notification.new(token: token, expiry: 0, priority: 10)
 
-  # notification.alert = (0...30).map { ('a'..'z').to_a[rand(10)] }.join
-  # notification.alert = "Teste final AAPL - (Apple inc) test#{i} GE: Steadily Building Stamina - A Bullish Algorithmic Perspective"
   notification.alert = "Ilya test #{i}"
   notification.badge = 1
   notification.sound = "sosumi.aiff"
@@ -31,6 +29,11 @@ num.times do |i|
   # notification.custom_data = {foo: "bar"}
 
   notification_array << notification
+end
+
+apn.capture_exceptions do |e|
+  puts "Exception! #{e.class.name}: #{e}"
+  puts e.backtrace[0,10]
 end
 
 # failed_notifications = Manager.push(APN, notification_array)
