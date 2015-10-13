@@ -22,7 +22,7 @@ module MockServer
         @bad_count += 1
         break
       when "666"
-        puts "#{id}. Test get counts: #{res[:id]}"
+        puts "#{id}. Test get counts: good=#{@good_count}, bad=#{@bad_count}"
         socket.write([@good_count, @bad_count].pack('NN'))
         @good_count = @bad_count = 0
         break
