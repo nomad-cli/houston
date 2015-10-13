@@ -1,4 +1,3 @@
-require 'logger'
 require 'timeout'
 
 module Houston
@@ -10,6 +9,7 @@ module Houston
 
   class Client
     attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase, :timeout
+    attr_reader :logger
 
     class << self
       def development
@@ -39,19 +39,6 @@ module Houston
       @exception_handler = block
     end
 
-    def logger
-      if !Thread.current[:logger]
-        logger = Logger.new("log/houston_test_#{Time.now.strftime('%Y%m%d')}.log")
-        logger.datetime_format = Time.now.strftime "%Y-%m-%dT%H:%M:%S"
-        logger.formatter = proc do |severity, datetime, progname, msg|
-          "#{@pid}: #{datetime} #{severity}: #{msg}\n"
-        end
-        Thread.current[:logger] = logger
-      else
-        Thread.current[:logger]
-      end
-    end
-
     def initialize
       @gateway_uri = ENV['APN_GATEWAY_URI']
       @feedback_uri = ENV['APN_FEEDBACK_URI']
@@ -63,6 +50,7 @@ module Houston
       @connections_queue = Queue.new
       @connection_threads = []
       @measures = {}
+      @logger = BackgroundLogger.new 'log/houston_test', :daily
     end
 
     def measure type

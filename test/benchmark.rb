@@ -1,3 +1,4 @@
+require_relative '../lib/houston/background_logger'
 require_relative '../lib/houston/client'
 require_relative '../lib/houston/connection'
 require_relative '../lib/houston/notification'
