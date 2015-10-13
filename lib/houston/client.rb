@@ -128,6 +128,7 @@ module Houston
       end
 
       logger.info("Finished after #{Time.now - beginning}")
+      logger.info("Errors count: #{failed_notifications.size}/#{sent_count}")
       logger.info("Measures: #{@measures.to_json}")
 
       failed_notifications
