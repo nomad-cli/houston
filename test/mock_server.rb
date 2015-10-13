@@ -15,13 +15,19 @@ module MockServer
     puts "#{id}. Client connected from #{socket.addr}"
     while !socket.eof?
       res = APNParser.read(socket)
-      if res[:token][0, 3] == "bad"
+      case res[:token][0,3]
+      when "bad"
         socket.write([2,8,res[:id]].pack('ccN'))
-        puts "#{id}. Bad: #{res[:id]}: #{res[:token]}"
+        puts "#{id}. Bad: #{res[:id]}, #{res[:token]}"
         @bad_count += 1
         break
+      when "666"
+        puts "#{id}. Test get counts: #{res[:id]}"
+        socket.write([@good_count, @bad_count].pack('NN'))
+        @good_count = @bad_count = 0
+        break
       else
-        puts "#{id}. Good: #{res[:id]}: #{res[:token]}"
+        puts "#{id}. Good: #{res[:id]}, #{res[:token]}"
         @good_count += 1
       end
     end

@@ -34,8 +34,20 @@ num.times do |i|
 end
 
 # failed_notifications = Manager.push(APN, notification_array)
-failed_notifications = apn.push(notification_array) {|index| puts "progress: #{index}"}
+failed_notifications = apn.push(notification_array.freeze) {|index| print "progress: #{index}         \r"}
 puts "failed #{failed_notifications.size}: #{failed_notifications.map{|n| n.token }.join(', ')}"
+
+puts "Validating count against server:"
+connection = apn.get_connection
+test_notification = Houston::Notification.new(token: "666")
+connection.write(test_notification.message)
+good, bad = connection.read.unpack('NN')
+connection.close
+real_bad = failed_notifications.size
+real_good = notification_array.size - real_bad
+puts "Good: #{good}=#{real_good} #{good==real_good ? 'OK' : 'FAIL'}"
+puts "Bad: #{bad}=#{real_bad} #{bad==real_bad ? 'OK' : 'FAIL'}"
+
 # APN.push(notification_array)
 # puts failed_notifications
 # logger = Logger.new("houston_test.log", 'daily')
