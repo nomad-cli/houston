@@ -69,6 +69,7 @@ module Houston
       logger.info("Connections creation took: #{Time.now - beginning}")
 
       beginning = Time.now
+      notifications = notifications.dup #no side effects
       notifications.each_with_index{|notification, index| notification.id = index}
 
       sent_count = 0
