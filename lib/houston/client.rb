@@ -50,7 +50,6 @@ module Houston
       @connections_queue = Queue.new
       @connection_threads = []
       @measures = {}
-      @logger = BackgroundLogger.new 'log/houston_test', :daily
     end
 
     def measure type
@@ -61,6 +60,7 @@ module Houston
     end
 
     def push(notifications, packet_size: 10)
+      @logger = BackgroundLogger.new 'log/houston_test', :daily
       failed_notifications = []
 
       beginning = Time.now
@@ -135,6 +135,7 @@ module Houston
       threads, @connection_threads = @connection_threads, []
       threads.each{|t| t.join(5) || t.kill } #allow started connections to finish opening, but if time passes, kill anyway
       @connections_queue.pop.close while !@connections_queue.empty? #clean whole pool
+      @logger.close
     end
 
     def add_connection

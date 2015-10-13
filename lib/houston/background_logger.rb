@@ -14,6 +14,8 @@ require 'fileutils'
 #
 # You can pass custom formatter, proc with same arguments as for Logger#formatter=.
 # Currently you can't change date format for formatter
+# NOTE: Since logger file is opened and is held withing thread, GC won't close it when BackgroundLogger object gets out of scope.
+#       Please make sure to close it manually, or find better solution and fix this code :)
 class BackgroundLogger
   TIME_SUFFIX_FORMATS = {
     monthly: '%Y%m',
