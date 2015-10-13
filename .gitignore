@@ -2,3 +2,4 @@
 *.cer
 Gemfile.lock
 coverage/
+log/
