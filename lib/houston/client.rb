@@ -87,7 +87,7 @@ module Houston
               write_notifications(connection, group)
 
               sent_count += group.size
-              yield sent_count
+              yield sent_count if block_given?
             end
           rescue Errno::EPIPE => e
             logger.warn "Broken pipe on write, last sent id: #{last_sent_id}"
@@ -124,7 +124,7 @@ module Houston
         logger.info "Error index #{error_index}/#{notifications.size}, token '#{error_notification.token}'"
 
         sent_count = local_start_index + error_index + 1
-        yield sent_count
+        yield sent_count if block_given?
         notifications.shift(error_index + 1)
       end
 
