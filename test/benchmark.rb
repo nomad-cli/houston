@@ -36,7 +36,11 @@ apn.capture_exceptions do |e|
 end
 
 # failed_notifications = Manager.push(APN, notification_array)
-failed_notifications = apn.push(notification_array.freeze) {|index| print "progress: #{index}         \r"}
+progress = 0
+teller = Thread.new{ loop{ sleep 1; puts "Progress: #{progress}, #{(progress*100.0/notification_array.size).round}%" } }
+failed_notifications = apn.push(notification_array.freeze) {|index| progress = index }
+teller.kill
+puts "Done: #{progress}, #{(progress*100.0/notification_array.size).round}%"
 puts "failed #{failed_notifications.size}: #{failed_notifications.map{|n| n.token }.join(', ')}"
 
 puts "Validating count against server:"
