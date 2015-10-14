@@ -87,7 +87,9 @@ module Houston
               write_notifications(connection, group)
 
               sent_count += group.size
-              yield sent_count if block_given?
+              measure(:yield) do
+                yield sent_count if block_given?
+              end
             end
           rescue Errno::EPIPE => e
             logger.warn "Broken pipe on write, last sent id: #{last_sent_id}"
@@ -172,15 +174,18 @@ module Houston
     end
 
     def write_notifications(connection, notifications)
-      messages = notifications.map do |noti|
-        begin
-          measure(:message){noti.message}
-        rescue => e
-          log_exception!(e, "create notification message")
+      request = measure(:messages) do
+        messages = notifications.map do |noti|
+          begin
+            noti.message
+          rescue => e
+            log_exception!(e, "create notification message")
+          end
         end
+
+        messages.compact.join
       end
 
-      request = messages.compact.join
       measure(:write){connection.write(request)}
     end
 
