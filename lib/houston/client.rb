@@ -91,8 +91,8 @@ module Houston
                 yield sent_count if block_given?
               end
             end
-          rescue Errno::EPIPE => e
-            logger.warn "Broken pipe on write, last sent id: #{last_sent_id}"
+          rescue Errno::EPIPE, Errno::ECONNRESET => e
+            logger.warn "Connection close on write (#{e.class.name}), last sent id: #{last_sent_id}"
           rescue => e
             log_exception!(e, "write") #swallow any unexpected exceptions
           end
