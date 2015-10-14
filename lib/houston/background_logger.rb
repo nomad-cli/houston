@@ -33,8 +33,10 @@ class BackgroundLogger
     @queue << args
   end
 
-  def close
-    @thread.kill
+  def close(timeout=10)
+    @queue << :die
+    @thread.join(timeout) || @thread.kill #allow thread to finish all logging, but kill him anyway after timeout
+    @thread = nil
   end
 
   LEVELS = {
@@ -70,7 +72,11 @@ class BackgroundLogger
           "#{pid}: #{datetime} #{severity}: #{msg}\n"
         end
 
-        loop{ logger.log(*@queue.pop) }
+        loop do
+          args = @queue.pop
+          break if args == :die
+          logger.log(*args)
+        end
       ensure
         logger.close if logger
         @queue = nil
