@@ -109,7 +109,7 @@ Houston 2.0 supports the new [enhanced notification format](https://developer.ap
 
 Houston also comes with the `apn` binary, which provides a convenient way to test notifications from the command line.
 
-    $ apn push "<token>" -c /path/to/apple_push_notification.pem -m "Hello from the command line!"
+    $ apn push "<token>" -c /path/to/apple_push_notification.pem -m "Hello from the command line! "
 
 ## Enabling Push Notifications on iOS
 
