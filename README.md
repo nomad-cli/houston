@@ -46,6 +46,19 @@ notification.custom_data = {foo: "bar"}
 APN.push(notification)
 ```
 
+## Configuration
+
+Houston will attempt to load configuration data from environment variables, if they're present. The following variables will be used.
+
+| Environment Variable | Description |
+|------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `APN_GATEWAY_URI` | The base URI for the APNS service to use. If left blank, will use the default APNS Production Gateway URI. |
+| `APN_FEEDBACK_URI` | The base URI for the APNS feedback service to use. If left blank, will use the default APNS Production Feedback URI. |
+| `APN_CERTIFICATE` | The file path to a valid APNS push certificate in `.pem` format (see "[Converting Your Certificate](#converting-your-certificate)" below). |
+| `APN_CERTIFICATE_DATA` | The contents of a valid APNS push certificate in `.pem` format (see "[Converting Your Certificate](#converting-your-certificate)" below); used in lieu of `APN_CERTIFICATE` if that variable is not provided. |
+| `APN_CERTIFICATE_PASSPHRASE` | If the APNS certificate is protected by a passphrase, provide this variable to use when decrypting it. |
+| `APN_TIMEOUT` | The timeout used when communicating with APNS. If not provided, the default of 0.5 seconds is used. |
+
 ### Error Handling
 
 If an error occurs when sending a particular notification, its `error` attribute will be populated:
