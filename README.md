@@ -6,7 +6,7 @@ Houston is a simple gem for sending Apple Push Notifications. Pass your credenti
 
 In a production application, you will probably want to schedule or queue notifications into a background job. Whether you're using [queue_classic](https://github.com/ryandotsmith/queue_classic), [resque](https://github.com/defunkt/resque), or rolling you own infrastructure, integrating Houston couldn't be simpler.
 
-Another caveat is that Houston doesn't manage device tokens for you. For that, you should check out [Helios](http://helios.io)
+Another caveat is that Houston doesn't manage device tokens for you. For that, you should check out [Helios](http://helios-io.github.io/)
 
 > Houston is named for [Houston, TX](http://en.wikipedia.org/wiki/Houston), the metonymical home of [NASA's Johnson Space Center](http://en.wikipedia.org/wiki/Lyndon_B._Johnson_Space_Center), as in _Houston, We Have Liftoff!_.
 
