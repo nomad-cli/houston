@@ -148,9 +148,17 @@ and the apple certificate as p12 files. Here is a quick walkthrough on how to do
 2. Right click and choose `Export 2 items…`.
 3. Choose the p12 format from the drop down and name it `cert.p12`.
 
-Now covert the p12 file to a pem file:
+Now convert the p12 file to a pem file:
 
-    $ openssl pkcs12 -in cert.p12 -out apple_push_notification.pem -nodes -clcerts
+### Unencrypted private key - don't store this certificate in version control!
+
+    $ openssl pkcs12 -in cert.p12 -out apple_push_notification_no_password.pem -nodes -clcerts
+
+### Encrypted private key
+
+    $ openssl pkcs12 -in cert.p12 -out apple_push_notification_with_password.pem -clcerts -aes256
+
+You'll have to specify the password in the APN_CERTIFICATE_PASSPHRASE environment variable if you use the encrypted option.
 
 ## Creator
 
