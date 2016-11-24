@@ -40,6 +40,7 @@ notification.badge = 57
 notification.sound = "sosumi.aiff"
 notification.category = "INVITE_CATEGORY"
 notification.content_available = true
+notification.mutable_content = true
 notification.custom_data = {foo: "bar"}
 
 # And... sent! That's all it takes.
