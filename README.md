@@ -76,6 +76,15 @@ Houston::Notification.new(:sound => '',
                           :content_available => true)
 ```
 
+### Mutable Notifications
+
+To send a mutable push notification supported by iOS10+:
+
+```ruby
+Houston::Notification.new(:mutable_content => true)
+```
+
+
 ### Persistent Connections
 
 If you want to manage your own persistent connection to Apple push services, such as for background workers, here's how to do it:
