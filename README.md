@@ -103,7 +103,7 @@ Houston::Client.development.devices
 
 #### Feedback Service Example
 
-In practice, you'll use a reference to instance of the APN object you created in the Usage section above. Here's an example rake job that marks device tokens as invalid, based on the feedback service from Apple. This example assumes devices are tracked in a model called Device.
+In practice, you'll use a reference to instance of the APN object you create (see the Usage section). Here's a rake job that marks device tokens as invalid based on the feedback service from Apple. This example assumes devices are tracked in a model called Device (i.e. User.devices).
 
 In config/initializers/houston.rb:
 
