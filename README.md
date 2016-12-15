@@ -121,7 +121,7 @@ namespace :notifications do
       # The device_hash format is: { token: token, timestamp: timestamp }
       # https://github.com/nomad/houston/blob/master/lib/houston/client.rb#L73
 
-      Device.find_by!(token: token).update!(bad_device_token: true)
+      Device.find_by!(token: device_hash["token"]).update!(bad_device_token: true)
     end
   end
 end
