@@ -101,6 +101,32 @@ Apple provides a feedback service to query for unregistered device tokens, these
 Houston::Client.development.devices
 ```
 
+#### Feedback Service Example
+
+In practice, you'll use a reference to instance of the APN object you created in the Usage section above. Here's an example rake job that marks device tokens as invalid, based on the feedback service from Apple. This example assumes devices are tracked in a model called Device.
+
+In config/initializers/houston.rb:
+
+```ruby
+APN = Houston::Client.development
+APN.certificate = File.read("/path/to/apple_push_notification.pem")
+```
+
+In lib/tasks/notifications.rake:
+
+```ruby
+namespace :notifications do
+  task device_token_feedback: [:environment] do
+    APN.devices.each do |device_hash|
+      # The device_hash format is: { token: token, timestamp: timestamp }
+      # https://github.com/nomad/houston/blob/master/lib/houston/client.rb#L73
+
+      Device.find_by!(token: token).update!(bad_device_token: true)
+    end
+  end
+end
+```
+
 ## Versioning
 
 Houston 2.0 supports the new [enhanced notification format](https://developer.apple.com/library/ios/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/Chapters/CommunicatingWIthAPS.html#//apple_ref/doc/uid/TP40008194-CH101-SW4). Support for the legacy notification format is available in 1.x releases.
