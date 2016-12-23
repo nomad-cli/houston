@@ -51,7 +51,7 @@ APN.push(notification)
 Houston will attempt to load configuration data from environment variables, if they're present. The following variables will be used.
 
 | Environment Variable | Description |
-| - | - |
+| --- | --- |
 | `APN_GATEWAY_URI` | The base URI for the APNS service to use. If left blank, will use the default APNS Production Gateway URI. |
 | `APN_FEEDBACK_URI` | The base URI for the APNS feedback service to use. If left blank, will use the default APNS Production Feedback URI. |
 | `APN_CERTIFICATE` | The file path to a valid APNS push certificate in `.pem` format (see "[Converting Your Certificate](#converting-your-certificate)" below). |
