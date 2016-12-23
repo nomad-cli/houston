@@ -1,9 +1,9 @@
 module Houston
-  APPLE_PRODUCTION_GATEWAY_URI = "apn://gateway.push.apple.com:2195"
-  APPLE_PRODUCTION_FEEDBACK_URI = "apn://feedback.push.apple.com:2196"
+  APPLE_PRODUCTION_GATEWAY_URI = 'apn://gateway.push.apple.com:2195'
+  APPLE_PRODUCTION_FEEDBACK_URI = 'apn://feedback.push.apple.com:2196'
 
-  APPLE_DEVELOPMENT_GATEWAY_URI = "apn://gateway.sandbox.push.apple.com:2195"
-  APPLE_DEVELOPMENT_FEEDBACK_URI = "apn://feedback.sandbox.push.apple.com:2196"
+  APPLE_DEVELOPMENT_GATEWAY_URI = 'apn://gateway.sandbox.push.apple.com:2195'
+  APPLE_DEVELOPMENT_FEEDBACK_URI = 'apn://feedback.sandbox.push.apple.com:2196'
 
   class Client
     attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase, :timeout
@@ -53,7 +53,7 @@ module Houston
           read_socket, write_socket = IO.select([ssl], [ssl], [ssl], nil)
           if (read_socket && read_socket[0])
             if error = connection.read(6)
-              command, status, index = error.unpack("ccN")
+              command, status, index = error.unpack('ccN')
               notification.apns_error_code = status
               notification.mark_as_unsent!
             end
@@ -70,7 +70,7 @@ module Houston
           feedback = line.unpack('N1n1H140')
           timestamp = feedback[0]
           token = feedback[2].scan(/.{0,8}/).join(' ').strip
-          devices << {token: token, timestamp: timestamp} if token && timestamp
+          devices << { token: token, timestamp: timestamp } if token && timestamp
         end
       end
 
@@ -78,7 +78,7 @@ module Houston
     end
 
     def devices
-      unregistered_devices.collect{|device| device[:token]}
+      unregistered_devices.collect { |device| device[:token] }
     end
 
     def certificate_data

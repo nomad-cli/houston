@@ -45,7 +45,7 @@ module Houston
     end
 
     def open?
-      not (@ssl and @socket).nil?
+      not (@ssl && @socket).nil?
     end
 
     def close
