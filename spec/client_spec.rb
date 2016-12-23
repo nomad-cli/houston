@@ -4,7 +4,7 @@ describe Houston::Client do
   subject { Houston::Client.development }
 
   before(:each) do
-    stub_const("Houston::Connection", MockConnection)
+    stub_const('Houston::Connection', MockConnection)
   end
 
   context '#development' do
@@ -12,12 +12,12 @@ describe Houston::Client do
 
     describe '#gateway_uri' do
       subject { super().gateway_uri }
-      it { should == Houston::APPLE_DEVELOPMENT_GATEWAY_URI}
+      it { should == Houston::APPLE_DEVELOPMENT_GATEWAY_URI }
     end
 
     describe '#feedback_uri' do
       subject { super().feedback_uri }
-      it { should == Houston::APPLE_DEVELOPMENT_FEEDBACK_URI}
+      it { should == Houston::APPLE_DEVELOPMENT_FEEDBACK_URI }
     end
   end
 
@@ -26,21 +26,21 @@ describe Houston::Client do
 
     describe '#gateway_uri' do
       subject { super().gateway_uri }
-      it { should == Houston::APPLE_PRODUCTION_GATEWAY_URI}
+      it { should == Houston::APPLE_PRODUCTION_GATEWAY_URI }
     end
 
     describe '#feedback_uri' do
       subject { super().feedback_uri }
-      it { should == Houston::APPLE_PRODUCTION_FEEDBACK_URI}
+      it { should == Houston::APPLE_PRODUCTION_FEEDBACK_URI }
     end
   end
 
   context '#new' do
     context 'passing options through ENV' do
-      ENV['APN_GATEWAY_URI'] = "apn://gateway.example.com"
-      ENV['APN_FEEDBACK_URI'] = "apn://feedback.example.com"
-      ENV['APN_CERTIFICATE_PASSPHRASE'] = "passphrase"
-      ENV['APN_TIMEOUT'] = "10.0"
+      ENV['APN_GATEWAY_URI'] = 'apn://gateway.example.com'
+      ENV['APN_FEEDBACK_URI'] = 'apn://feedback.example.com'
+      ENV['APN_CERTIFICATE_PASSPHRASE'] = 'passphrase'
+      ENV['APN_TIMEOUT'] = '10.0'
 
       subject do
         Houston::Client.new
@@ -83,8 +83,8 @@ describe Houston::Client do
   describe '#unregistered_devices' do
     it 'should correctly parse the feedback response and create a dictionary of unregistered devices with timestamps' do
       expect(subject.unregistered_devices).to eq [
-        {:token=>"ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969", :timestamp=>443779200},
-        {:token=>"ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5970", :timestamp=>1388678223}
+        { token: 'ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969', timestamp: 443779200 },
+        { token: 'ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5970', timestamp: 1388678223 }
       ]
     end
   end
@@ -92,8 +92,8 @@ describe Houston::Client do
   describe '#devices' do
     it 'should correctly parse the feedback response and create an array of unregistered devices' do
       expect(subject.devices).to eq [
-        "ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969",
-        "ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5970"
+        'ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969',
+        'ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5970'
       ]
     end
   end
