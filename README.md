@@ -100,27 +100,19 @@ Apple provides a feedback service to query for unregistered device tokens, these
 Houston::Client.development.devices
 ```
 
-#### Feedback Service Example
+In practice, you'll use a reference to instance of the APN object you create (see the Usage section). Here's a rake job that marks device tokens as invalid based on the feedback service from Apple. This example assumes devices are tracked in a model called Device (i.e. `User.devices`).
 
-In practice, you'll use a reference to instance of the APN object you create (see the Usage section). Here's a rake job that marks device tokens as invalid based on the feedback service from Apple. This example assumes devices are tracked in a model called Device (i.e. User.devices).
-
-In config/initializers/houston.rb:
-
-```ruby
-APN = Houston::Client.development
-APN.certificate = File.read("/path/to/apple_push_notification.pem")
-```
-
-In lib/tasks/notifications.rake:
+In `lib/tasks/notifications.rake`:
 
 ```ruby
 namespace :notifications do
   task device_token_feedback: [:environment] do
     APN.devices.each do |device_hash|
-      # The device_hash format is: { token: token, timestamp: timestamp }
-      # https://github.com/nomad/houston/blob/master/lib/houston/client.rb#L73
-
-      Device.find_by!(token: device_hash["token"]).update!(bad_device_token: true)
+      # Format: { token: token, timestamp: timestamp }
+      device = Device.find_by(token: device_hash['token'])
+      next unless device.present?
+      # Remove device token
+      device.update_attribute(:device_token, nil)
     end
   end
 end
