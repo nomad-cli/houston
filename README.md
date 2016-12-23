@@ -40,7 +40,7 @@ notification.badge = 57
 notification.sound = "sosumi.aiff"
 notification.category = "INVITE_CATEGORY"
 notification.content_available = true
-notification.custom_data = {foo: "bar"}
+notification.custom_data = { foo: "bar" }
 
 # And... sent! That's all it takes.
 APN.push(notification)
@@ -51,7 +51,7 @@ APN.push(notification)
 Houston will attempt to load configuration data from environment variables, if they're present. The following variables will be used.
 
 | Environment Variable | Description |
-|------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| - | - |
 | `APN_GATEWAY_URI` | The base URI for the APNS service to use. If left blank, will use the default APNS Production Gateway URI. |
 | `APN_FEEDBACK_URI` | The base URI for the APNS feedback service to use. If left blank, will use the default APNS Production Feedback URI. |
 | `APN_CERTIFICATE` | The file path to a valid APNS push certificate in `.pem` format (see "[Converting Your Certificate](#converting-your-certificate)" below). |
@@ -69,11 +69,10 @@ puts "Error: #{notification.error}." if notification.error
 
 ### Silent Notifications
 
-To send a silent push notification, set `sound` to an empty string (`''`):
+To send a silent push notification, set `sound` to an empty string (`""`):
 
 ```ruby
-Houston::Notification.new(:sound => '',
-                          :content_available => true)
+Houston::Notification.new(sound: "", content_available: true)
 ```
 
 ### Persistent Connections
