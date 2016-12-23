@@ -154,6 +154,23 @@ didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
 }
 ```
 
+### Swift 
+```swift
+UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { authorized, error in
+  if authorized {
+    UIApplication.shared.registerForRemoteNotifications()
+  }
+})
+            
+func didRegisterForRemoteNotifications(token: Data) { 
+    // Register the device token with a webservice
+}
+    
+func failedToRegisterForRemoteNotifications(error: Error) { 
+     print("Error: \(error)")
+ }
+```
+
 ## Converting Your Certificate
 
 > These instructions come from the [APN on Rails](https://github.com/PRX/apn_on_rails) project, which is another great option for sending push notifications.
