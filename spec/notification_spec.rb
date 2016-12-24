@@ -134,9 +134,9 @@ describe Houston::Notification do
     end
 
     it 'should create a dictionary only with mutable-content' do
-        expect(Houston::Notification.new(mutable_content: true).payload).to eq({
+        expect(Houston::Notification.new(mutable_content: true).payload).to eq(
           'aps' => { 'mutable-content' => 1 }
-        })
+        )
     end
 
     it 'should allow custom data inside aps key' do

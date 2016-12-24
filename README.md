@@ -78,12 +78,11 @@ Houston::Notification.new(sound: "", content_available: true)
 
 ### Mutable Notifications
 
-To send a mutable push notification supported by iOS10+:
+To send a mutable push notification (supported by iOS 10+), set `mutable_content` to `true`:
 
 ```ruby
-Houston::Notification.new(:mutable_content => true)
+Houston::Notification.new(mutable_content: true)
 ```
-
 
 ### Persistent Connections
 
