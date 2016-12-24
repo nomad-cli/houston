@@ -40,6 +40,7 @@ notification.badge = 57
 notification.sound = "sosumi.aiff"
 notification.category = "INVITE_CATEGORY"
 notification.content_available = true
+notification.mutable_content = true
 notification.custom_data = { foo: "bar" }
 
 # And... sent! That's all it takes.
@@ -73,6 +74,14 @@ To send a silent push notification, set `sound` to an empty string (`""`):
 
 ```ruby
 Houston::Notification.new(sound: "", content_available: true)
+```
+
+### Mutable Notifications
+
+To send a mutable push notification (supported by iOS 10+), set `mutable_content` to `true`:
+
+```ruby
+Houston::Notification.new(mutable_content: true)
 ```
 
 ### Persistent Connections
