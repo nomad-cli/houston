@@ -84,8 +84,7 @@ describe Houston::Notification do
 
   describe '#payload' do
     it 'should create a compliant dictionary' do
-      expect(subject.payload).to eq({
-        'aps' => {
+      expect(subject.payload).to eq(        'aps' => {
           'alert' => 'Houston, we have a problem.',
           'badge' => 2701,
           'sound' => 'sosumi.aiff',
@@ -93,46 +92,45 @@ describe Houston::Notification do
           'content-available' => 1
         },
         'key1' => 1,
-        'key2' => 'abc'
-      })
+        'key2' => 'abc')
     end
 
     it 'should create a dictionary of only custom data and empty aps' do
-      expect(Houston::Notification.new(key1: 123, key2: 'xyz').payload).to eq({
+      expect(Houston::Notification.new(key1: 123, key2: 'xyz').payload).to eq(
         'aps' => {},
         'key1' => 123,
         'key2' => 'xyz'
-      })
+      )
     end
 
     it 'should create a dictionary only with alerts' do
-      expect(Houston::Notification.new(alert: 'Hello, World!').payload).to eq({
+      expect(Houston::Notification.new(alert: 'Hello, World!').payload).to eq(
         'aps' => { 'alert' => 'Hello, World!' }
-      })
+      )
     end
 
     it 'should create a dictionary only with badges' do
-      expect(Houston::Notification.new(badge: '123').payload).to eq({
+      expect(Houston::Notification.new(badge: '123').payload).to eq(
         'aps' => { 'badge' => 123 }
-      })
+      )
     end
 
     it 'should create a dictionary only with sound' do
-      expect(Houston::Notification.new(sound: 'ring.aiff').payload).to eq({
+      expect(Houston::Notification.new(sound: 'ring.aiff').payload).to eq(
         'aps' => { 'sound' => 'ring.aiff' }
-      })
+      )
     end
 
     it 'should create a dictionary only with category' do
-      expect(Houston::Notification.new(category: 'INVITE_CATEGORY').payload).to eq({
+      expect(Houston::Notification.new(category: 'INVITE_CATEGORY').payload).to eq(
         'aps' => { 'category' => 'INVITE_CATEGORY' }
-      })
+      )
     end
 
     it 'should create a dictionary only with content-available' do
-      expect(Houston::Notification.new(content_available: true).payload).to eq({
+      expect(Houston::Notification.new(content_available: true).payload).to eq(
         'aps' => { 'content-available' => 1 }
-      })
+      )
     end
 
     it 'should create a dictionary only with mutable-content' do
@@ -143,16 +141,16 @@ describe Houston::Notification do
 
     it 'should allow custom data inside aps key' do
       notification_options = { :badge => 567, 'aps' => { 'loc-key' => 'my-key' } }
-      expect(Houston::Notification.new(notification_options).payload).to eq({
+      expect(Houston::Notification.new(notification_options).payload).to eq(
         'aps' => { 'loc-key' => 'my-key', 'badge' => 567 }
-      })
+      )
     end
 
     it 'should create notification from hash with string and symbol keys' do
-      notification_options = { :badge => 567, :aps => { 'loc-key' => 'my-key' } }
-      expect(Houston::Notification.new(notification_options).payload['aps']).to eq({
+      notification_options = { badge: 567, aps: { 'loc-key' => 'my-key' } }
+      expect(Houston::Notification.new(notification_options).payload['aps']).to eq(
         'loc-key' => 'my-key', 'badge' => 567
-      })
+      )
     end
   end
 
