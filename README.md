@@ -176,7 +176,15 @@ and the apple certificate as p12 files. Here is a quick walkthrough on how to do
 
 Now convert the p12 file to a pem file:
 
+**Unencrypted private key (do not store this certificate in version control)**
+
     $ openssl pkcs12 -in cert.p12 -out apple_push_notification.pem -nodes -clcerts
+
+**Encrypted private key**
+
+    $ openssl pkcs12 -in cert.p12 -out apple_push_notification.pem -aes256 -clcerts
+
+You'll have to specify the password in the `APN_CERTIFICATE_PASSPHRASE` environment variable if you use the encrypted option.
 
 ## Creator
 
