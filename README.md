@@ -47,6 +47,8 @@ notification.custom_data = { foo: "bar" }
 APN.push(notification)
 ```
 
+To generate a `.pem` file, it is recommended to use [fastlane pem](https://fastlane.tools/pem), which completely automates the process of creating the certificate.
+
 ## Configuration
 
 Houston will attempt to load configuration data from environment variables, if they're present. The following variables will be used.
