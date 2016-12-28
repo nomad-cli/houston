@@ -4,15 +4,15 @@ Push Notifications don't have to be difficult.
 
 Houston is a simple gem for sending Apple Push Notifications. Pass your credentials, construct your message, and send it.
 
-In a production application, you will probably want to schedule or queue notifications into a background job. Whether you're using [queue_classic](https://github.com/ryandotsmith/queue_classic), [resque](https://github.com/defunkt/resque), or rolling you own infrastructure, integrating Houston couldn't be simpler.
+In a production application, you will probably want to schedule or queue notifications into a background job. Whether you're using [queue_classic](https://github.com/ryandotsmith/queue_classic), [resque](https://github.com/resque/resque), or rolling you own infrastructure, integrating Houston couldn't be simpler.
 
-Another caveat is that Houston doesn't manage device tokens for you. For that, you should check out [Helios](http://helios.io)
+Another caveat is that Houston doesn't manage device tokens for you. For that, you should check out [Helios](http://github.com/helios-framework/helios).
 
 > Houston is named for [Houston, TX](http://en.wikipedia.org/wiki/Houston), the metonymical home of [NASA's Johnson Space Center](http://en.wikipedia.org/wiki/Lyndon_B._Johnson_Space_Center), as in _Houston, We Have Liftoff!_.
 
-> It's part of a series of world-class command-line utilities for iOS development, which includes [Cupertino](https://github.com/mattt/cupertino) (Apple Dev Center management), [Shenzhen](https://github.com/mattt/shenzhen) (Building & Distribution), [Venice](https://github.com/mattt/venice) (In-App Purchase Receipt Verification), [Dubai](https://github.com/mattt/dubai) (Passbook pass generation), and [Nashville](https://github.com/nomad/nashville) (iTunes Store API).
+> It's part of a series of world-class command-line utilities for iOS development, which includes [Cupertino](https://github.com/nomad/cupertino) (Apple Dev Center management), [Shenzhen](https://github.com/nomad/shenzhen) (Building & Distribution), [Venice](https://github.com/nomad/venice) (In-App Purchase Receipt Verification), [Dubai](https://github.com/nomad/dubai) (Passbook pass generation), and [Nashville](https://github.com/nomad/nashville) (iTunes Store API).
 
-> This project is also part of a series of open source libraries covering the mission-critical aspects of an iOS app's infrastructure. Be sure to check out its sister projects: [GroundControl](https://github.com/mattt/GroundControl), [SkyLab](https://github.com/mattt/SkyLab), [houston](https://github.com/mattt/houston), and [Orbiter](https://github.com/mattt/Orbiter).
+> This project is also part of a series of open source libraries covering the mission-critical aspects of an iOS app's infrastructure. Be sure to check out its sister projects: [GroundControl](https://github.com/mattt/GroundControl), [SkyLab](https://github.com/mattt/SkyLab), [houston](https://github.com/nomad/houston), and [Orbiter](https://github.com/mattt/Orbiter).
 
 ## Installation
 
@@ -40,7 +40,8 @@ notification.badge = 57
 notification.sound = "sosumi.aiff"
 notification.category = "INVITE_CATEGORY"
 notification.content_available = true
-notification.custom_data = {foo: "bar"}
+notification.mutable_content = true
+notification.custom_data = { foo: "bar" }
 
 # And... sent! That's all it takes.
 APN.push(notification)
@@ -51,7 +52,7 @@ APN.push(notification)
 Houston will attempt to load configuration data from environment variables, if they're present. The following variables will be used.
 
 | Environment Variable | Description |
-|------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| --- | --- |
 | `APN_GATEWAY_URI` | The base URI for the APNS service to use. If left blank, will use the default APNS Production Gateway URI. |
 | `APN_FEEDBACK_URI` | The base URI for the APNS feedback service to use. If left blank, will use the default APNS Production Feedback URI. |
 | `APN_CERTIFICATE` | The file path to a valid APNS push certificate in `.pem` format (see "[Converting Your Certificate](#converting-your-certificate)" below). |
@@ -69,11 +70,18 @@ puts "Error: #{notification.error}." if notification.error
 
 ### Silent Notifications
 
-To send a silent push notification, set `sound` to an empty string (`''`):
+To send a silent push notification, set `sound` to an empty string (`""`):
 
 ```ruby
-Houston::Notification.new(:sound => '',
-                          :content_available => true)
+Houston::Notification.new(sound: "", content_available: true)
+```
+
+### Mutable Notifications
+
+To send a mutable push notification (supported by iOS 10+), set `mutable_content` to `true`:
+
+```ruby
+Houston::Notification.new(mutable_content: true)
 ```
 
 ### Persistent Connections
@@ -99,6 +107,24 @@ Apple provides a feedback service to query for unregistered device tokens, these
 
 ```ruby
 Houston::Client.development.devices
+```
+
+In practice, you'll use a reference to instance of the APN object you create (see the Usage section). Here's a rake job that marks device tokens as invalid based on the feedback service from Apple. This example assumes devices are tracked in a model called Device (i.e. `User.devices`).
+
+In `lib/tasks/notifications.rake`:
+
+```ruby
+namespace :notifications do
+  task device_token_feedback: [:environment] do
+    APN.devices.each do |device_hash|
+      # Format: { token: token, timestamp: timestamp }
+      device = Device.find_by(token: device_hash['token'])
+      next unless device.present?
+      # Remove device token
+      device.update_attribute(:device_token, nil)
+    end
+  end
+end
 ```
 
 ## Versioning
