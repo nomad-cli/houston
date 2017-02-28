@@ -130,9 +130,11 @@ Houston also comes with the `apn` binary, which provides a convenient way to tes
 
 ## Enabling Push Notifications on iOS
 
-### AppDelegate.m
+### Objective-C
 
 ```objective-c
+// AppDelegate.m
+
 - (void)applicationDidFinishLaunching:(UIApplication *)application {
   // ...
 
@@ -156,19 +158,20 @@ didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
 
 ### Swift 
 ```swift
-UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound], completionHandler: { authorized, error in
-  if authorized {
-    UIApplication.shared.registerForRemoteNotifications()
-  }
-})
-            
-func didRegisterForRemoteNotifications(token: Data) { 
+// AppDelegate.swift
+
+func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey : Any]? = nil) -> Bool {
+    application.registerForRemoteNotifications()
+    return true
+}
+
+func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
     // Register the device token with a webservice
 }
-    
-func failedToRegisterForRemoteNotifications(error: Error) { 
-     print("Error: \(error)")
- }
+
+func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+    print("error \(error)")
+}
 ```
 
 ## Converting Your Certificate
