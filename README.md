@@ -141,9 +141,11 @@ Houston also comes with the `apn` binary, which provides a convenient way to tes
 
 ## Enabling Push Notifications on iOS
 
-### AppDelegate.m
+### Objective-C
 
 ```objective-c
+// AppDelegate.m
+
 - (void)applicationDidFinishLaunching:(UIApplication *)application {
   // ...
 
@@ -162,6 +164,24 @@ didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
 didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
 {
     NSLog(@"Error: %@", error);
+}
+```
+
+### Swift 
+```swift
+// AppDelegate.swift
+
+func application(_ application: UIApplication, willFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey : Any]? = nil) -> Bool {
+    application.registerForRemoteNotifications()
+    return true
+}
+
+func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+    // Register the device token with a webservice
+}
+
+func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+    print("error \(error)")
 }
 ```
 
