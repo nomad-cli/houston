@@ -26,22 +26,22 @@ require 'houston'
 # Environment variables are automatically read, or can be overridden by any specified options. You can also
 # conveniently use `Houston::Client.development` or `Houston::Client.production`.
 APN = Houston::Client.development
-APN.certificate = File.read("/path/to/apple_push_notification.pem")
+APN.certificate = File.read('/path/to/apple_push_notification.pem')
 
 # An example of the token sent back when a device registers for notifications
-token = "<ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969>"
+token = '<ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969>'
 
 # Create a notification that alerts a message to the user, plays a sound, and sets the badge on the app
 notification = Houston::Notification.new(device: token)
-notification.alert = "Hello, World!"
+notification.alert = 'Hello, World!'
 
 # Notifications can also change the badge count, have a custom sound, have a category identifier, indicate available Newsstand content, or pass along arbitrary data.
 notification.badge = 57
-notification.sound = "sosumi.aiff"
-notification.category = "INVITE_CATEGORY"
+notification.sound = 'sosumi.aiff'
+notification.category = 'INVITE_CATEGORY'
 notification.content_available = true
 notification.mutable_content = true
-notification.custom_data = { foo: "bar" }
+notification.custom_data = { foo: 'bar' }
 
 # And... sent! That's all it takes.
 APN.push(notification)
@@ -72,10 +72,10 @@ puts "Error: #{notification.error}." if notification.error
 
 ### Silent Notifications
 
-To send a silent push notification, set `sound` to an empty string (`""`):
+To send a silent push notification, set `sound` to an empty string (`''`):
 
 ```ruby
-Houston::Notification.new(sound: "", content_available: true)
+Houston::Notification.new(sound: '', content_available: true)
 ```
 
 ### Mutable Notifications
@@ -91,13 +91,13 @@ Houston::Notification.new(mutable_content: true)
 If you want to manage your own persistent connection to Apple push services, such as for background workers, here's how to do it:
 
 ```ruby
-certificate = File.read("/path/to/apple_push_notification.pem")
-passphrase = "..."
+certificate = File.read('/path/to/apple_push_notification.pem')
+passphrase = '...'
 connection = Houston::Connection.new(Houston::APPLE_DEVELOPMENT_GATEWAY_URI, certificate, passphrase)
 connection.open
 
 notification = Houston::Notification.new(device: token)
-notification.alert = "Hello, World!"
+notification.alert = 'Hello, World!'
 connection.write(notification.message)
 
 connection.close

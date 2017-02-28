@@ -26,8 +26,8 @@ module Houston
 
     def initialize(uri, certificate, passphrase)
       @uri = URI(uri)
-      @certificate = certificate
-      @passphrase = passphrase
+      @certificate = certificate.to_s
+      @passphrase = passphrase.to_s
     end
 
     def open
