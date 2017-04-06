@@ -88,7 +88,7 @@ module Houston
     end
 
     def valid?
-      payload.to_json.bytesize <= MAXIMUM_PAYLOAD_SIZE
+      JSON(payload).bytesize <= MAXIMUM_PAYLOAD_SIZE
     end
 
     def error
@@ -102,7 +102,7 @@ module Houston
       end
 
       def payload_item
-        json = payload.to_json
+        json = JSON(payload)
         [2, json.bytes.count, json].pack('cna*')
       end
 
