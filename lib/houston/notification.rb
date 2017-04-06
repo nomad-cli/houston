@@ -88,7 +88,7 @@ module Houston
     end
 
     def valid?
-      payload.to_json.bytesize <= MAXIMUM_PAYLOAD_SIZE
+      JSON(payload).bytesize <= MAXIMUM_PAYLOAD_SIZE
     end
 
     def error
