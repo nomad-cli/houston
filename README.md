@@ -97,15 +97,15 @@ Houston::Notification.new(mutable_content: true)
 If you want to manage your own persistent connection to Apple push services, such as for background workers, here's how to do it:
 
 ```ruby
-certificate = File.read('/path/to/apple_push_notification.pem')
-passphrase = '...'
-connection = Houston::Connection.new(Houston::APPLE_DEVELOPMENT_GATEWAY_URI, certificate, passphrase)
+#certificate = File.read('/path/to/apple_push_notification.pem')
+#passphrase = '...'
+#connection = Houston::Connection.new(Houston::APPLE_DEVELOPMENT_GATEWAY_URI, certificate, passphrase)
 
-#or use new jwt token system 
-#private_key = File.read('/path/to/apple_push_ABCDE12345.p8')
-#key_id = 'ABCDE12345'
-#team_id = 'ZYXZY99966'
-#connection = Houston::Connection.new(Houston::APPLE_DEVELOPMENT_GATEWAY_URI, private_key, team_id, key_id)
+#use new jwt token system 
+private_key = File.read('/path/to/apple_push_ABCDE12345.p8')
+key_id = 'ABCDE12345'
+team_id = 'ZYXZY99966'
+connection = Houston::Connection.new(Houston::APPLE_DEVELOPMENT_GATEWAY_URI, private_key, team_id, key_id)
 
 connection.open
 
