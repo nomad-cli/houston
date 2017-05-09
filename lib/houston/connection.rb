@@ -47,33 +47,21 @@ module Houston
     end
 
     def self.write_via_jwt(uri_str, private_key, team_id, key_id, payload, token)
-      puts '|'+uri_str+'|'
-
-      puts private_key.inspect
       ec_key = OpenSSL::PKey::EC.new(private_key)
-      puts ec_key.inspect
-      jwt_token = JWT.encode({iss: team_id}, ec_key, 'ES256', {kid: key_id})
-      puts jwt_token
-
-      #http.ca_file = "/tmp/ca-bundle.crt"
-      #http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+      jwt_token = JWT.encode({iss: team_id, iat: Time.now.to_i}, ec_key, 'ES256', {kid: key_id})
 
       client = NetHttp2::Client.new(uri_str)
       h = {}
       h['content-type'] = 'application/json'
+      h['apns-expiration'] = '0'
+      h['apns-priority'] = '10'
       h['apns-topic'] = ENV['APN_TOPIC'].to_s
       h['authorization'] = "bearer #{jwt_token}"
-      puts h.inspect
       res = client.call(:post, '/3/device/'+token, body: payload.to_json, timeout: 50, 
                         headers: h) 
       client.close
-      puts 11114444433331.to_s
-      puts res.status
-      puts res.body
       return nil if res.status.to_i == 200
       res.body
-    rescue Object => o
-      puts o.inspect
     end
 
     def open?

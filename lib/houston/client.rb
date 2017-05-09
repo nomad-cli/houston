@@ -57,6 +57,7 @@ module Houston
           if err == nil
             notification.mark_as_sent!
           else
+            puts err
             notification.apns_error_code = err
             notification.mark_as_unsent!
           end
