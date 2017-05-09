@@ -105,13 +105,13 @@ If you want to manage your own persistent connection to Apple push services, suc
 private_key = File.read('/path/to/apple_push_ABCDE12345.p8')
 key_id = 'ABCDE12345'
 team_id = 'ZYXZY99966'
-connection = Houston::Connection.new(Houston::APPLE_DEVELOPMENT_GATEWAY_URI, private_key, team_id, key_id)
+connection = Houston::Connection.new(Houston::APPLE_DEVELOPMENT_JWT_URI, private_key, team_id, key_id)
 
-connection.open
+connection.make_token
 
 notification = Houston::Notification.new(device: token)
 notification.alert = 'Hello, World!'
-connection.write(notification.message)
+connection.write_via_jwt(notification.payload, notification.token)
 
 connection.close
 ```
@@ -151,7 +151,8 @@ Houston 2.0 supports the new [enhanced notification format](https://developer.ap
 Houston also comes with the `apn` binary, which provides a convenient way to test notifications from the command line.
 
     $ apn push "<token>" -c /path/to/apple_push_notification.pem -m "Hello from the command line! "
-    $ apn push "<token>" -p /path/to/apple_push_ABCDE12345.p8 -t ZYXZY99966 -k ABCDE12345 -m "Hello from the command line! "
+    # todo for p8
+    # $ apn push "<token>" -p /path/to/apple_push_ABCDE12345.p8 -t ZYXZY99966 -k ABCDE12345 -m "Hello from the command line! "
 
 ## Enabling Push Notifications on iOS
 
