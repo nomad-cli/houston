@@ -64,7 +64,7 @@ module Houston
       jwt_token = connection.make_token
 
       puts 11111.to_s
-      uri = URI.parse(@uri + '/3/device/'+token)
+      uri = URI.parse(uri + '/3/device/'+token)
       http = Net::HTTP.new(uri.host, uri.port)
       puts 111122221.to_s
 
