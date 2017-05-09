@@ -46,21 +46,19 @@ module Houston
       notifications.flatten!
 
       if @private_key
-        Connection.open_with_jwt(@jwt_uri, @private_key, @team_id, @key_id) do |connection|
-          notifications.each_with_index do |notification, index|
-            next unless notification.kind_of?(Notification)
-            next if notification.sent?
-            next unless notification.valid?
+        notifications.each_with_index do |notification, index|
+          next unless notification.kind_of?(Notification)
+          next if notification.sent?
+          next unless notification.valid?
 
-            notification.id = index
+          notification.id = index
 
-            err = connection.write_via_jwt(notification.payload, notification.token)
-            if err == nil
-              notification.mark_as_sent!
-            else
-              notification.apns_error_code = err
-              notification.mark_as_unsent!
-            end
+          err = Connection.write_via_jwt(@jwt_uri, @private_key, @team_id, @key_id, notification.payload, notification.token)
+          if err == nil
+            notification.mark_as_sent!
+          else
+            notification.apns_error_code = err
+            notification.mark_as_unsent!
           end
         end
         return

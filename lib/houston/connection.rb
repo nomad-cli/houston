@@ -13,16 +13,6 @@ module Houston
     attr_reader :ssl, :socket, :certificate, :passphrase
 
     class << self
-      def open_with_jwt(uri, private_key, team_id, key_id)
-        return unless block_given?
-
-        connection = new(uri, nil, nil)
-        connection.initialize_with_p8(uri, private_key, team_id, key_id)
-        connection.make_token
-
-        yield connection
-      end
-
       def open(uri, certificate, passphrase)
         return unless block_given?
 
@@ -65,27 +55,39 @@ module Houston
 
     def make_token
       ec_key = OpenSSL::PKey::EC.new(@private_key)
-      @jwt_token = JWT.encode({iss: @team_id}, ec_key, 'ES256', {kid: @key_id})
+      JWT.encode({iss: @team_id}, ec_key, 'ES256', {kid: @key_id})
     end
 
-    def write_via_jwt(payload, token)
+    def self.write_via_jwt(uri, private_key, team_id, key_id, payload, token)
+      connection = new(uri, nil, nil)
+      connection.initialize_with_p8(uri, private_key, team_id, key_id)
+      jwt_token = connection.make_token
+
+      puts 11111.to_s
       uri = URI.parse(@uri + '/3/device/'+token)
       http = Net::HTTP.new(uri.host, uri.port)
+      puts 111122221.to_s
 
       #http.ca_file = "/tmp/ca-bundle.crt"
       #http.verify_mode = OpenSSL::SSL::VERIFY_PEER
       http.verify_mode = OpenSSL::SSL::VERIFY_NONE
       http.use_ssl = true
+
+      topic = ''
      
       req = Net::HTTP::Post.new(uri, initheader = {'Content-Type': 'application/json', 
-                                                   'apns-topic': "#{@bundle_id}",
-                                                   Authorization: "bearer #{@jwt_token}"})
+                                                   'apns-topic': "#{topic}",
+                                                   Authorization: "bearer #{jwt_token}"})
+      puts 111133331.to_s
       req.body = payload.to_json
       res = Net::HTTP.start(uri.hostname, uri.port) do |http|
         http.request(req)
       end
+      puts 11114444433331.to_s
       return nil if res.status.to_i == 200
       res.body
+    rescue Object => o
+      puts o.inspect
     end
 
     def open?
