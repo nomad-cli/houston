@@ -60,7 +60,7 @@ module Houston
 
     def self.write_via_jwt(uri_str, private_key, team_id, key_id, payload, token)
       connection = new(uri_str, nil, nil)
-      connection.initialize_with_p8(uri, private_key, team_id, key_id)
+      connection.initialize_with_p8(uri_str, private_key, team_id, key_id)
       jwt_token = connection.make_token
 
       puts 11111.to_s
