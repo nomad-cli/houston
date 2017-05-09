@@ -35,7 +35,7 @@ module Houston
       @certificate = certificate_data
       @private_key = private_key_data
       @team_id = ENV['APN_TEAM_ID']
-      @key_id ENV['APN_KEY_ID']
+      @key_id = ENV['APN_KEY_ID']
       @passphrase = ENV['APN_CERTIFICATE_PASSPHRASE']
       @timeout = Float(ENV['APN_TIMEOUT'] || 0.5)
     end
