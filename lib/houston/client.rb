@@ -54,7 +54,7 @@ module Houston
 
             notification.id = index
 
-            err = connection.write_via_jwt(notification.message)
+            err = connection.write_via_jwt(notification.payload, notification.token)
             if err == nil
               notification.mark_as_sent!
             else
