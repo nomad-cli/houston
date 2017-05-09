@@ -16,7 +16,7 @@ module Houston
       def open_with_jwt(uri, private_key, team_id, key_id)
         return unless block_given?
 
-        connection = new(uri, certificate, passphrase)
+        connection = new(uri, nil, nil)
         connection.initialize_with_p8(uri, private_key, team_id, key_id)
         connection.make_token
 
