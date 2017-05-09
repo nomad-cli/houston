@@ -3,6 +3,7 @@ require 'socket'
 require 'openssl'
 require 'forwardable'
 require 'jwt'
+require 'net-http2'
 
 module Houston
   class Connection
@@ -59,31 +60,26 @@ module Houston
     end
 
     def self.write_via_jwt(uri_str, private_key, team_id, key_id, payload, token)
+      puts '|'+uri_str+'|'
       connection = new(uri_str, nil, nil)
       connection.initialize_with_p8(uri_str, private_key, team_id, key_id)
       jwt_token = connection.make_token
-
-      puts 11111.to_s
-      uri = URI.parse(uri_str + '/3/device/'+token)
-      puts 111122221.to_s
+      puts jwt_token
 
       #http.ca_file = "/tmp/ca-bundle.crt"
       #http.verify_mode = OpenSSL::SSL::VERIFY_PEER
 
-      topic = ''
-     
-      req = Net::HTTP::Post.new(uri, initheader = {'Content-Type': 'application/json', 
-                                                   'apns-topic': "#{topic}",
-                                                   Authorization: "bearer #{jwt_token}"})
-      puts 111133331.to_s
-      req.body = payload.to_json
+      topic = ENV['APN_TOPIC']
 
-      http = Net::HTTP.new(uri.host, uri.port)
-      http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      res = http.request(req)
-
+      client = NetHttp2::Client.new(uri_str)
+      res = client.call(:post, '/3/device/'+token, body: payload.to_json, timeout: 5, 
+                        headers: { 'Content-Type': 'application/json',
+                                   'apns-topic': "#{topic}",
+                                   Authorization: "bearer #{jwt_token}"})
+      client.close
       puts 11114444433331.to_s
+      puts res.status
+      puts res.body
       return nil if res.status.to_i == 200
       res.body
     rescue Object => o
