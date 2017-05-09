@@ -69,13 +69,13 @@ module Houston
       #http.ca_file = "/tmp/ca-bundle.crt"
       #http.verify_mode = OpenSSL::SSL::VERIFY_PEER
 
-      topic = ENV['APN_TOPIC']
-
       client = NetHttp2::Client.new(uri_str)
-      res = client.call(:post, '/3/device/'+token, body: payload.to_json, timeout: 5, 
-                        headers: { 'Content-Type': 'application/json',
-                                   'apns-topic': "#{topic}",
-                                   Authorization: "bearer #{jwt_token}"})
+      h = {}
+      h['content-type'] = 'application/json'
+      h['apns-topic'] = ENV['APN_TOPIC']
+      h['authorization'] = "bearer #{jwt_token}"
+      res = client.call(:post, '/3/device/'+token, body: payload.to_json, timeout: 50, 
+                        headers: h) 
       client.close
       puts 11114444433331.to_s
       puts res.status
