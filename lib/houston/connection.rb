@@ -72,9 +72,9 @@ module Houston
       uri = URI.parse(@uri + '/3/device/'+token)
       http = Net::HTTP.new(uri.host, uri.port)
 
-      http.ca_file = "ca-bundle.crt"
+      http.ca_file = "/tmp/ca-bundle.crt"
       http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-      http.original_use_ssl = true
+      http.use_ssl = true
      
       req = Net::HTTP::Post.new(uri, initheader = {'Content-Type': 'application/json', 
                                                    'apns-topic': "#{@bundle_id}",
