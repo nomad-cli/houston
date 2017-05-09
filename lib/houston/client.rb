@@ -46,7 +46,7 @@ module Houston
       notifications.flatten!
 
       if @private_key
-        Connection.open_via_jwt(@jwt_uri, @private_key, @team_id, @key_id) do |connection|
+        Connection.open_with_jwt(@jwt_uri, @private_key, @team_id, @key_id) do |connection|
           notifications.each_with_index do |notification, index|
             next unless notification.kind_of?(Notification)
             next if notification.sent?
