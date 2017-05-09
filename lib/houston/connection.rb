@@ -58,20 +58,17 @@ module Houston
       JWT.encode({iss: @team_id}, ec_key, 'ES256', {kid: @key_id})
     end
 
-    def self.write_via_jwt(uri, private_key, team_id, key_id, payload, token)
+    def self.write_via_jwt(uri_str, private_key, team_id, key_id, payload, token)
       connection = new(uri, nil, nil)
       connection.initialize_with_p8(uri, private_key, team_id, key_id)
       jwt_token = connection.make_token
 
       puts 11111.to_s
-      uri = URI.parse(uri + '/3/device/'+token)
-      http = Net::HTTP.new(uri.host, uri.port)
+      uri = URI.parse(uri_str + '/3/device/'+token)
       puts 111122221.to_s
 
       #http.ca_file = "/tmp/ca-bundle.crt"
       #http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      http.use_ssl = true
 
       topic = ''
      
@@ -80,9 +77,12 @@ module Houston
                                                    Authorization: "bearer #{jwt_token}"})
       puts 111133331.to_s
       req.body = payload.to_json
-      res = Net::HTTP.start(uri.hostname, uri.port) do |http|
-        http.request(req)
-      end
+
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      res = http.request(req)
+
       puts 11114444433331.to_s
       return nil if res.status.to_i == 200
       res.body
