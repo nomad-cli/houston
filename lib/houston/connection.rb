@@ -26,14 +26,6 @@ module Houston
       end
     end
 
-    def initialize_with_p8(uri, private_key, team_id, key_id)
-      @uri = uri
-      @private_key = private_key.to_s
-      @team_id = team_id.to_s
-      @key_id = key_id.to_s
-      @bundle_id = ''
-    end
-
     def initialize(uri, certificate, passphrase)
       @uri = URI(uri)
       @certificate = certificate.to_s
@@ -54,16 +46,13 @@ module Houston
       @ssl.connect
     end
 
-    def make_token
-      ec_key = OpenSSL::PKey::EC.new(@private_key)
-      JWT.encode({iss: @team_id}, ec_key, 'ES256', {kid: @key_id})
-    end
-
     def self.write_via_jwt(uri_str, private_key, team_id, key_id, payload, token)
       puts '|'+uri_str+'|'
-      connection = new(uri_str, nil, nil)
-      connection.initialize_with_p8(uri_str, private_key, team_id, key_id)
-      jwt_token = connection.make_token
+
+      puts private_key.inspect
+      ec_key = OpenSSL::PKey::EC.new(private_key)
+      puts ec_key.inspect
+      jwt_token = JWT.encode({iss: team_id}, ec_key, 'ES256', {kid: key_id})
       puts jwt_token
 
       #http.ca_file = "/tmp/ca-bundle.crt"
@@ -72,8 +61,9 @@ module Houston
       client = NetHttp2::Client.new(uri_str)
       h = {}
       h['content-type'] = 'application/json'
-      h['apns-topic'] = ENV['APN_TOPIC']
+      h['apns-topic'] = ENV['APN_TOPIC'].to_s
       h['authorization'] = "bearer #{jwt_token}"
+      puts h.inspect
       res = client.call(:post, '/3/device/'+token, body: payload.to_json, timeout: 50, 
                         headers: h) 
       client.close
