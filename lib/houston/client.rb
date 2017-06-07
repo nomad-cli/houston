@@ -50,12 +50,13 @@ module Houston
           connection.write(notification.message)
           notification.mark_as_sent!
 
-          read_socket, write_socket = IO.select([ssl], [ssl], [ssl], nil)
+          read_socket, write_socket = IO.select([ssl], [], [ssl], 0.1)
           if (read_socket && read_socket[0])
             if error = connection.read(6)
               command, status, index = error.unpack('ccN')
               notification.apns_error_code = status
               notification.mark_as_unsent!
+              push(notifications[notification.id + 1..-1])
             end
           end
         end
