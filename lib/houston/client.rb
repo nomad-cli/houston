@@ -61,7 +61,7 @@ module Houston
     end
 
     def push(notifications, packet_size: 10)
-      @logger = BackgroundLogger.new 'log/houston_test', :daily
+      @logger = BackgroundLogger.new 'log/houston_test'
       failed_notifications = []
 
       beginning = Time.now
