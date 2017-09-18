@@ -120,7 +120,7 @@ namespace :notifications do
   task device_token_feedback: [:environment] do
     APN.unregistered_devices.each do |device_hash|
       # Format: { token: token, timestamp: timestamp }
-      device = Device.find_by(token: device_hash['token'])
+      device = Device.find_by(token: device_hash[:token])
       next unless device.present?
       # Remove device token
       device.update_attribute(:device_token, nil)
