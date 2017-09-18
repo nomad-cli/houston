@@ -118,7 +118,7 @@ In `lib/tasks/notifications.rake`:
 ```ruby
 namespace :notifications do
   task device_token_feedback: [:environment] do
-    APN.devices.each do |device_hash|
+    APN.unregistered_devices.each do |device_hash|
       # Format: { token: token, timestamp: timestamp }
       device = Device.find_by(token: device_hash['token'])
       next unless device.present?
