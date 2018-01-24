@@ -43,7 +43,7 @@ command :push do |c|
     say_error "Missing certificate file option (-c /path/to/certificate.pem)" and abort unless @certificate
     say_error "Could not find certificate file '#{@certificate}'" and abort unless File.exists?(@certificate)
 
-    @passphrase = options.passphrase ? password : ""
+    @passphrase = options.passphrase ? password : nil
 
     @alert = options.alert
     @badge = options.badge.nil? ? nil : options.badge.to_i
@@ -138,7 +138,7 @@ command :feedback do |c|
     say_error "Missing certificate file option (-c /path/to/certificate.pem)" and abort unless @certificate
     say_error "Could not find certificate file '#{@certificate}'" and abort unless File.exists?(@certificate)
 
-    @passphrase = options.passphrase ? password : ""
+    @passphrase = options.passphrase ? password : nil
 
     client = (@environment == :production) ? Houston::Client.production : Houston::Client.development
     client.certificate = File.read(@certificate)
