@@ -50,6 +50,9 @@ module Houston
       @mutable_content = options.delete(:mutable_content)
 
       @custom_data = options
+
+      @sent_at = nil
+      @apns_error_code = nil
     end
 
     def payload
