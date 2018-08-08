@@ -26,7 +26,10 @@ require 'houston'
 # Environment variables are automatically read, or can be overridden by any specified options. You can also
 # conveniently use `Houston::Client.development` or `Houston::Client.production`.
 APN = Houston::Client.development
-APN.certificate = File.read('/path/to/apple_push_notification.pem')
+#APN.certificate = File.read('/path/to/apple_push_notification.pem')
+APN.private_key = File.read('/path/to/apple_push_ABCDE12345.p8')
+APN.key_id = 'ABCDE12345'
+APN.team_id = 'ZYXZY99966'
 
 # An example of the token sent back when a device registers for notifications
 token = '<ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969>'
@@ -60,6 +63,9 @@ Houston will attempt to load configuration data from environment variables, if t
 | `APN_CERTIFICATE` | The file path to a valid APNS push certificate in `.pem` format (see "[Converting Your Certificate](#converting-your-certificate)" below). |
 | `APN_CERTIFICATE_DATA` | The contents of a valid APNS push certificate in `.pem` format (see "[Converting Your Certificate](#converting-your-certificate)" below); used in lieu of `APN_CERTIFICATE` if that variable is not provided. |
 | `APN_CERTIFICATE_PASSPHRASE` | If the APNS certificate is protected by a passphrase, provide this variable to use when decrypting it. |
+| `APN_PRIVATE_KEY` | The file path to a valid APNS push private key in `.p8` format
+| `APN_TEAM_ID` | teamId |
+| `APN_KEY_ID` | keyId |
 | `APN_TIMEOUT` | The timeout used when communicating with APNS. If not provided, the default of 0.5 seconds is used. |
 
 ### Error Handling
@@ -91,14 +97,21 @@ Houston::Notification.new(mutable_content: true)
 If you want to manage your own persistent connection to Apple push services, such as for background workers, here's how to do it:
 
 ```ruby
-certificate = File.read('/path/to/apple_push_notification.pem')
-passphrase = '...'
-connection = Houston::Connection.new(Houston::APPLE_DEVELOPMENT_GATEWAY_URI, certificate, passphrase)
-connection.open
+#certificate = File.read('/path/to/apple_push_notification.pem')
+#passphrase = '...'
+#connection = Houston::Connection.new(Houston::APPLE_DEVELOPMENT_GATEWAY_URI, certificate, passphrase)
+
+#use new jwt token system 
+private_key = File.read('/path/to/apple_push_ABCDE12345.p8')
+key_id = 'ABCDE12345'
+team_id = 'ZYXZY99966'
+connection = Houston::Connection.new(Houston::APPLE_DEVELOPMENT_JWT_URI, private_key, team_id, key_id)
+
+connection.make_token
 
 notification = Houston::Notification.new(device: token)
 notification.alert = 'Hello, World!'
-connection.write(notification.message)
+connection.write_via_jwt(notification.payload, notification.token)
 
 connection.close
 ```
@@ -138,6 +151,8 @@ Houston 2.0 supports the new [enhanced notification format](https://developer.ap
 Houston also comes with the `apn` binary, which provides a convenient way to test notifications from the command line.
 
     $ apn push "<token>" -c /path/to/apple_push_notification.pem -m "Hello from the command line! "
+    # todo for p8
+    # $ apn push "<token>" -p /path/to/apple_push_ABCDE12345.p8 -t ZYXZY99966 -k ABCDE12345 -m "Hello from the command line! "
 
 ## Enabling Push Notifications on iOS
 
@@ -186,6 +201,8 @@ func application(_ application: UIApplication, didFailToRegisterForRemoteNotific
 ```
 
 ## Converting Your Certificate
+
+New as of 2017: You can use JWT tokens and a p8 file from apple INSTEAD of this pem key thing
 
 > These instructions come from the [APN on Rails](https://github.com/PRX/apn_on_rails) project, which is another great option for sending push notifications.
 

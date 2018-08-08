@@ -1,18 +1,22 @@
 module Houston
   APPLE_PRODUCTION_GATEWAY_URI = 'apn://gateway.push.apple.com:2195'
+  APPLE_PRODUCTION_JWT_URI = 'https://api.push.apple.com' #/3/device/$deviceToken
   APPLE_PRODUCTION_FEEDBACK_URI = 'apn://feedback.push.apple.com:2196'
 
   APPLE_DEVELOPMENT_GATEWAY_URI = 'apn://gateway.sandbox.push.apple.com:2195'
+  APPLE_DEVELOPMENT_JWT_URI = 'https://api.development.push.apple.com' #/3/device/$deviceToken
   APPLE_DEVELOPMENT_FEEDBACK_URI = 'apn://feedback.sandbox.push.apple.com:2196'
 
+
   class Client
-    attr_accessor :gateway_uri, :feedback_uri, :certificate, :passphrase, :timeout
+    attr_accessor :gateway_uri, :feedback_uri, :jwt_uri, :certificate, :passphrase, :timeout, :private_key, :team_id, :key_id
 
     class << self
       def development
         client = self.new
         client.gateway_uri = APPLE_DEVELOPMENT_GATEWAY_URI
         client.feedback_uri = APPLE_DEVELOPMENT_FEEDBACK_URI
+        client.jwt_uri = APPLE_DEVELOPMENT_JWT_URI
         client
       end
 
@@ -20,6 +24,7 @@ module Houston
         client = self.new
         client.gateway_uri = APPLE_PRODUCTION_GATEWAY_URI
         client.feedback_uri = APPLE_PRODUCTION_FEEDBACK_URI
+        client.jwt_uri = APPLE_PRODUCTION_JWT_URI
         client
       end
     end
@@ -28,6 +33,9 @@ module Houston
       @gateway_uri = ENV['APN_GATEWAY_URI']
       @feedback_uri = ENV['APN_FEEDBACK_URI']
       @certificate = certificate_data
+      @private_key = private_key_data
+      @team_id = ENV['APN_TEAM_ID']
+      @key_id = ENV['APN_KEY_ID']
       @passphrase = ENV['APN_CERTIFICATE_PASSPHRASE']
       @timeout = Float(ENV['APN_TIMEOUT'] || 0.5)
     end
@@ -36,6 +44,26 @@ module Houston
       return if notifications.empty?
 
       notifications.flatten!
+
+      if @private_key
+        notifications.each_with_index do |notification, index|
+          next unless notification.kind_of?(Notification)
+          next if notification.sent?
+          next unless notification.valid?
+
+          notification.id = index
+
+          err = Connection.write_via_jwt(@jwt_uri, @private_key, @team_id, @key_id, notification.payload, notification.token)
+          if err == nil
+            notification.mark_as_sent!
+          else
+            puts err
+            notification.apns_error_code = err
+            notification.mark_as_unsent!
+          end
+        end
+        return
+      end
 
       Connection.open(@gateway_uri, @certificate, @passphrase) do |connection|
         ssl = connection.ssl
@@ -79,6 +107,10 @@ module Houston
 
     def devices
       unregistered_devices.collect { |device| device[:token] }
+    end
+
+    def private_key_data
+      File.read(ENV['APN_PRIVATE_KEY'])
     end
 
     def certificate_data
