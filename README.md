@@ -42,6 +42,7 @@ notification.category = 'INVITE_CATEGORY'
 notification.content_available = true
 notification.mutable_content = true
 notification.custom_data = { foo: 'bar' }
+notification.url_args = %w[boarding A998]
 
 # And... sent! That's all it takes.
 APN.push(notification)

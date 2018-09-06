@@ -13,7 +13,8 @@ describe Houston::Notification do
       priority: 10,
       content_available: true,
       key1: 1,
-      key2: 'abc'
+      key2: 'abc',
+      url_args: %w[boarding A998]
     }
   }
 
@@ -69,6 +70,11 @@ describe Houston::Notification do
     it { should == { key1: 1, key2: 'abc' } }
   end
 
+  describe '#url_args' do
+    subject { super().url_args }
+    it { should == %w[boarding A998] }
+  end
+
   context 'using :device instead of :token' do
     subject do
       notification_options[:device] = notification_options[:token]
@@ -84,12 +90,14 @@ describe Houston::Notification do
 
   describe '#payload' do
     it 'should create a compliant dictionary' do
-      expect(subject.payload).to eq(        'aps' => {
+      expect(subject.payload).to eq(
+        'aps' => {
           'alert' => 'Houston, we have a problem.',
           'badge' => 2701,
           'sound' => 'sosumi.aiff',
           'category' => 'INVITE_CATEGORY',
-          'content-available' => 1
+          'content-available' => 1,
+          'url-args' => %w[boarding A998]
         },
         'key1' => 1,
         'key2' => 'abc')
@@ -179,7 +187,7 @@ describe Houston::Notification do
 
     it 'should create a message with correct frame length' do
       _1, length, _2 = subject.message.unpack('cNa*')
-      expect(length).to eq(211)
+      expect(length).to eq(242)
     end
 
     def parse_items(items_stream)
@@ -206,7 +214,7 @@ describe Houston::Notification do
     it 'should include an item #2 with the payload as JSON' do
       _1, _2, items_stream = subject.message.unpack('cNa*')
       items = parse_items(items_stream)
-      expect(items).to include([2, 155, '{"key1":1,"key2":"abc","aps":{"alert":"Houston, we have a problem.","badge":2701,"sound":"sosumi.aiff","category":"INVITE_CATEGORY","content-available":1}}'])
+      expect(items).to include([2, 186, '{"key1":1,"key2":"abc","aps":{"alert":"Houston, we have a problem.","badge":2701,"sound":"sosumi.aiff","category":"INVITE_CATEGORY","content-available":1,"url-args":["boarding","A998"]}}'])
     end
 
     it 'should include an item #3 with the identifier' do
