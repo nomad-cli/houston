@@ -154,7 +154,7 @@ module Houston
         retries -= 1
         retry if retries > 0
 
-        #ok, we're out of reties, pass exception to main thread (but only once!)
+        #ok, we're out of retries, pass exception to main thread (but only once!)
         Thread.exclusive do
           @main_thread.raise e unless @already_dead
           @already_dead = true
@@ -168,7 +168,7 @@ module Houston
     end
 
     def log_exception!(e, where)
-      @exception_handler.call(e) if @exception_handler
+      @exception_handler.call(e, where) if @exception_handler
       logger.error "* #{e.class.name} on #{where}: #{e.message}\n" + e.backtrace[0,5].join("\n")
       nil
     end
