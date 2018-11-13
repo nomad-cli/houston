@@ -43,6 +43,7 @@ notification.content_available = true
 notification.mutable_content = true
 notification.custom_data = { foo: 'bar' }
 notification.url_args = %w[boarding A998]
+notification.thread_id = 'notify-team-ios'
 
 # And... sent! That's all it takes.
 APN.push(notification)

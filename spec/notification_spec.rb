@@ -14,7 +14,8 @@ describe Houston::Notification do
       content_available: true,
       key1: 1,
       key2: 'abc',
-      url_args: %w[boarding A998]
+      url_args: %w[boarding A998],
+      thread_id: 'notify-team-ios'
     }
   }
 
@@ -75,6 +76,11 @@ describe Houston::Notification do
     it { should == %w[boarding A998] }
   end
 
+  describe '#thread_id' do
+    subject { super().thread_id }
+    it { should == 'notify-team-ios' }
+  end
+
   context 'using :device instead of :token' do
     subject do
       notification_options[:device] = notification_options[:token]
@@ -97,7 +103,8 @@ describe Houston::Notification do
           'sound' => 'sosumi.aiff',
           'category' => 'INVITE_CATEGORY',
           'content-available' => 1,
-          'url-args' => %w[boarding A998]
+          'url-args' => %w[boarding A998],
+          'thread-id' => 'notify-team-ios'
         },
         'key1' => 1,
         'key2' => 'abc')
@@ -147,6 +154,12 @@ describe Houston::Notification do
         )
     end
 
+    it 'should create a dictionary only with thread-id' do
+      expect(Houston::Notification.new(thread_id: 'notify-ios-team').payload).to eq(
+          'aps' => { 'thread-id' => 'notify-ios-team' }
+       )
+    end
+
     it 'should allow custom data inside aps key' do
       notification_options = { :badge => 567, 'aps' => { 'loc-key' => 'my-key' } }
       expect(Houston::Notification.new(notification_options).payload).to eq(
@@ -187,7 +200,7 @@ describe Houston::Notification do
 
     it 'should create a message with correct frame length' do
       _1, length, _2 = subject.message.unpack('cNa*')
-      expect(length).to eq(242)
+      expect(length).to eq(272)
     end
 
     def parse_items(items_stream)
@@ -214,7 +227,7 @@ describe Houston::Notification do
     it 'should include an item #2 with the payload as JSON' do
       _1, _2, items_stream = subject.message.unpack('cNa*')
       items = parse_items(items_stream)
-      expect(items).to include([2, 186, '{"key1":1,"key2":"abc","aps":{"alert":"Houston, we have a problem.","badge":2701,"sound":"sosumi.aiff","category":"INVITE_CATEGORY","content-available":1,"url-args":["boarding","A998"]}}'])
+      expect(items).to include([2, 216, '{"key1":1,"key2":"abc","aps":{"alert":"Houston, we have a problem.","badge":2701,"sound":"sosumi.aiff","category":"INVITE_CATEGORY","content-available":1,"url-args":["boarding","A998"],"thread-id":"notify-team-ios"}}'])
     end
 
     it 'should include an item #3 with the identifier' do
