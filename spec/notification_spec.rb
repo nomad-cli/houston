@@ -141,6 +141,12 @@ describe Houston::Notification do
       })
     end
 
+    it 'should create a dictionary only with thread-id' do
+      expect(Houston::Notification.new(thread_id: 'notify-ios-team').payload).to eq(
+                                                                                     'aps' => { 'thread-id' => 'notify-ios-team' }
+                                                                                 )
+    end
+
     it 'should allow custom data inside aps key' do
       notification_options = { :badge => 567, 'aps' => { 'loc-key' => 'my-key' } }
       expect(Houston::Notification.new(notification_options).payload).to eq({

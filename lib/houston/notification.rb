@@ -29,7 +29,7 @@ module Houston
 
     MAXIMUM_PAYLOAD_SIZE = 2048
 
-    attr_accessor :token, :alert, :badge, :sound, :category, :content_available, :mutable_content, :custom_data, :id, :expiry, :priority
+    attr_accessor :token, :alert, :badge, :sound, :category, :content_available, :mutable_content, :custom_data, :id, :expiry, :priority, :thread_id
     attr_reader :sent_at
     attr_writer :apns_error_code
 
@@ -47,6 +47,7 @@ module Houston
       @priority = options.delete(:priority)
       @content_available = options.delete(:content_available)
       @mutable_content = options.delete(:mutable_content)
+      @thread_id = options.delete(:thread_id)
 
       @custom_data = options
     end
@@ -61,6 +62,7 @@ module Houston
       json['aps']['category'] = @category if @category
       json['aps']['content-available'] = 1 if @content_available
       json['aps']['mutable-content'] = 1 if @mutable_content
+      json['aps']['thread-id'] = @thread_id if @thread_id
 
       json
     end
