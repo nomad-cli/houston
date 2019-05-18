@@ -31,7 +31,7 @@ command :push do |c|
   c.option '-P', '--payload PAYLOAD', 'JSON payload for notifications'
   c.option '-e', '--environment ENV', [:production, :development], 'Environment to send push notification (production or development (default))'
   c.option '-c', '--certificate CERTIFICATE', 'Path to certificate (.pem) file'
-  c.option '-r', '--rawcert CERTIFICATE VALUE', 'Value of the certificate (.pem) file'
+  c.option '-r', '--raw-certificate CERTIFICATE VALUE', 'Actual content / value of the certificate (.pem) file'
   c.option '-p', '--[no]-passphrase', 'Prompt for a certificate passphrase'
 
   c.action do |args, options|
@@ -40,8 +40,8 @@ command :push do |c|
     @environment = options.environment.downcase.to_sym rescue :development
     say_error "Invalid environment,'#{@environment}' (should be either :development or :production)" and abort unless [:development, :production].include?(@environment)
 
-    if options.rawcert
-      @certificate = options.rawcert
+    if options.raw_certificate
+      @certificate = options.raw_certificate
     else
       @certificate = options.certificate
       say_error "Missing certificate option (-c /path/to/certificate.pem or -r certificate_value)" and abort unless @certificate
@@ -132,7 +132,7 @@ command :feedback do |c|
 
   c.example 'description', 'apn feedback -c /path/to/apple_push_certificate.pem'
   c.option '-c', '--certificate CERTIFICATE', 'Path to certificate (.pem) file'
-  c.option '-r', '--rawcert CERTIFICATE VALUE', 'Value of the certificate (.pem) file'
+  c.option '-r', '--raw-certificate CERTIFICATE VALUE', 'Actual content / value of the certificate (.pem) file'
   c.option '-e', '--environment ENV', [:production, :development], 'Environment to send push notification (production or development (default))'
   c.option '-p', '--[no]-passphrase', 'Prompt for a certificate passphrase'
 
@@ -141,8 +141,8 @@ command :feedback do |c|
     @environment = options.environment.downcase.to_sym rescue :development
     say_error "Invalid environment,'#{@environment}' (should be either :development or :production)" and abort unless [:development, :production].include?(@environment)
 
-    if options.rawcert
-      @certificate = options.rawcert
+    if options.raw_certificate
+      @certificate = options.raw_certificate
     else
       @certificate = options.certificate
       say_error "Missing certificate option (-c /path/to/certificate.pem or -r certificate_value)" and abort unless @certificate
