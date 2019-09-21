@@ -10,14 +10,14 @@ module Houston
 
     class << self
       def development
-        client = self.new
+        client = new
         client.gateway_uri = APPLE_DEVELOPMENT_GATEWAY_URI
         client.feedback_uri = APPLE_DEVELOPMENT_FEEDBACK_URI
         client
       end
 
       def production
-        client = self.new
+        client = new
         client.gateway_uri = APPLE_PRODUCTION_GATEWAY_URI
         client.feedback_uri = APPLE_PRODUCTION_FEEDBACK_URI
         client
@@ -41,7 +41,7 @@ module Houston
         ssl = connection.ssl
 
         notifications.each_with_index do |notification, index|
-          next unless notification.kind_of?(Notification)
+          next unless notification.is_a?(Notification)
           next if notification.sent?
           next unless notification.valid?
 
@@ -51,13 +51,13 @@ module Houston
           notification.mark_as_sent!
 
           read_socket, _write_socket = IO.select([ssl], [ssl], [ssl], nil)
-          if (read_socket && read_socket[0])
-            if error = connection.read(6)
-              _command, status, index = error.unpack('ccN')
-              notification.apns_error_code = status
-              notification.mark_as_unsent!
-            end
-          end
+          next unless read_socket && read_socket[0]
+
+          next unless error = connection.read(6)
+
+          _command, status, index = error.unpack('ccN')
+          notification.apns_error_code = status
+          notification.mark_as_unsent!
         end
       end
     end

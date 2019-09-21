@@ -11,8 +11,8 @@ require 'rspec'
 
 class MockConnection
   class << self
-    def open(uri, certificate, passphrase)
-      yield self.new
+    def open(_uri, _certificate, _passphrase)
+      yield new
     end
   end
 
@@ -23,7 +23,7 @@ class MockConnection
     ]
   end
 
-  def read(bytes)
+  def read(_bytes)
     return nil if @unregistered_devices.empty?
 
     @unregistered_devices.shift.pack('N1n1H*')

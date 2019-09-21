@@ -27,7 +27,7 @@ module Houston
     def initialize(uri, certificate, passphrase)
       @uri = URI(uri)
       @certificate = certificate.to_s
-      @passphrase = passphrase.to_s unless passphrase.nil?              
+      @passphrase = passphrase.to_s unless passphrase.nil?
     end
 
     def open
@@ -45,7 +45,7 @@ module Houston
     end
 
     def open?
-      not (@ssl && @socket).nil?
+      !(@ssl && @socket).nil?
     end
 
     def close
@@ -59,7 +59,7 @@ module Houston
     end
 
     def closed?
-      not open?
+      !open?
     end
   end
 end

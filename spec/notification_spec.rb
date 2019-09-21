@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe Houston::Notification do
-  let(:notification_options) {
+  let(:notification_options) do
     {
       token: '<ce8be627 2e43e855 16033e24 b4c28922 0eeda487 9c477160 b2545e95 b68b5969>',
       alert: 'Houston, we have a problem.',
@@ -17,7 +17,7 @@ describe Houston::Notification do
       url_args: %w[boarding A998],
       thread_id: 'notify-team-ios'
     }
-  }
+  end
 
   subject { Houston::Notification.new(notification_options) }
 
@@ -107,7 +107,8 @@ describe Houston::Notification do
           'thread-id' => 'notify-team-ios'
         },
         'key1' => 1,
-        'key2' => 'abc')
+        'key2' => 'abc'
+      )
     end
 
     it 'should create a dictionary of only custom data and empty aps' do
@@ -149,15 +150,15 @@ describe Houston::Notification do
     end
 
     it 'should create a dictionary only with mutable-content' do
-        expect(Houston::Notification.new(mutable_content: true).payload).to eq(
-          'aps' => { 'mutable-content' => 1 }
-        )
+      expect(Houston::Notification.new(mutable_content: true).payload).to eq(
+        'aps' => { 'mutable-content' => 1 }
+      )
     end
 
     it 'should create a dictionary only with thread-id' do
       expect(Houston::Notification.new(thread_id: 'notify-ios-team').payload).to eq(
-          'aps' => { 'thread-id' => 'notify-ios-team' }
-       )
+        'aps' => { 'thread-id' => 'notify-ios-team' }
+      )
     end
 
     it 'should allow custom data inside aps key' do

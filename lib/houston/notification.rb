@@ -22,6 +22,7 @@ module Houston
 
       def initialize(code)
         raise ArgumentError unless CODES.include?(code)
+
         super(CODES[code])
         @code = code
       end
@@ -34,8 +35,8 @@ module Houston
     attr_reader :sent_at
     attr_writer :apns_error_code
 
-    alias :device :token
-    alias :device= :token=
+    alias device token
+    alias device= token=
 
     def initialize(options = {})
       @token = options.delete(:token) || options.delete(:device)
@@ -58,11 +59,17 @@ module Houston
     end
 
     def payload
-      json = {}.merge(@custom_data || {}).inject({}) { |h, (k, v)| h[k.to_s] = v; h }
+      json = {}.merge(@custom_data || {}).each_with_object({}) { |(k, v), h| h[k.to_s] = v; }
 
       json['aps'] ||= {}
       json['aps']['alert'] = @alert if @alert
-      json['aps']['badge'] = @badge.to_i rescue 0 if @badge
+      if @badge
+        json['aps']['badge'] = begin
+                                 @badge.to_i
+                               rescue StandardError
+                                 0
+                               end
+      end
       json['aps']['sound'] = @sound if @sound
       json['aps']['category'] = @category if @category
       json['aps']['content-available'] = 1 if @content_available
@@ -99,30 +106,30 @@ module Houston
     end
 
     def error
-      APNSError.new(@apns_error_code) if @apns_error_code && @apns_error_code.nonzero?
+      APNSError.new(@apns_error_code) if @apns_error_code&.nonzero?
     end
 
     private
 
-      def device_token_item
-        [1, 32, @token.gsub(/[<\s>]/, '')].pack('cnH64')
-      end
+    def device_token_item
+      [1, 32, @token.gsub(/[<\s>]/, '')].pack('cnH64')
+    end
 
-      def payload_item
-        json = payload.to_json
-        [2, json.bytes.count, json].pack('cna*')
-      end
+    def payload_item
+      json = payload.to_json
+      [2, json.bytes.count, json].pack('cna*')
+    end
 
-      def identifier_item
-        [3, 4, @id].pack('cnN') unless @id.nil?
-      end
+    def identifier_item
+      [3, 4, @id].pack('cnN') unless @id.nil?
+    end
 
-      def expiration_item
-        [4, 4, @expiry.to_i].pack('cnN') unless @expiry.nil?
-      end
+    def expiration_item
+      [4, 4, @expiry.to_i].pack('cnN') unless @expiry.nil?
+    end
 
-      def priority_item
-        [5, 1, @priority].pack('cnc') unless @priority.nil?
-      end
+    def priority_item
+      [5, 1, @priority].pack('cnc') unless @priority.nil?
+    end
   end
 end
