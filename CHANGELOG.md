@@ -22,5 +22,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 - No removals (placeholder, remove this section if there are no entries).
 
-[Unreleased]: https://github.com/nomad/houston/compare/v2.4.0...HEAD
+[Unreleased]: https://github.com/nomad/houston/compare/2.4.0...HEAD
 [2.4.0]: https://github.com/nomad/houston/compare/v2.3.0...2.4.0
