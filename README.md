@@ -1,5 +1,7 @@
 ![Houston](https://raw.github.com/nomad/nomad.github.io/assets/houston-banner.png)
 
+[![Travis](https://img.shields.io/travis/nomad/houston.svg)](https://travis-ci.org/nomad/houston)
+
 Push Notifications don't have to be difficult.
 
 Houston is a simple gem for sending Apple Push Notifications. Pass your credentials, construct your message, and send it.
@@ -169,7 +171,7 @@ didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
 }
 ```
 
-### Swift 
+### Swift
 ```swift
 // AppDelegate.swift
 
