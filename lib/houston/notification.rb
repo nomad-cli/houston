@@ -76,7 +76,7 @@ module Houston
       json['aps']['mutable-content'] = 1 if @mutable_content
       json['aps']['url-args'] = @url_args if @url_args
       json['aps']['thread-id'] = @thread_id if @thread_id
-
+      json['aps']['push-type'] = 'alert'
       json
     end
 
