@@ -8,8 +8,6 @@ Houston is a simple gem for sending Apple Push Notifications. Pass your credenti
 
 In a production application, you will probably want to schedule or queue notifications into a background job. Whether you're using [queue_classic](https://github.com/ryandotsmith/queue_classic), [resque](https://github.com/resque/resque), or rolling you own infrastructure, integrating Houston couldn't be simpler.
 
-Another caveat is that Houston doesn't manage device tokens for you. For that, you should check out [Helios](http://github.com/helios-framework/helios).
-
 > Houston is named for [Houston, TX](http://en.wikipedia.org/wiki/Houston), the metonymical home of [NASA's Johnson Space Center](http://en.wikipedia.org/wiki/Lyndon_B._Johnson_Space_Center), as in _Houston, We Have Liftoff!_.
 
 > It's part of a series of world-class command-line utilities for iOS development, which includes [Cupertino](https://github.com/nomad/cupertino) (Apple Dev Center management), [Shenzhen](https://github.com/nomad/shenzhen) (Building & Distribution), [Venice](https://github.com/nomad/venice) (In-App Purchase Receipt Verification), [Dubai](https://github.com/nomad/dubai) (Passbook pass generation), and [Nashville](https://github.com/nomad/nashville) (iTunes Store API).
@@ -211,10 +209,6 @@ Now convert the p12 file to a pem file:
     $ openssl pkcs12 -in cert.p12 -out apple_push_notification.pem -aes256 -clcerts
 
 You'll have to specify the password in the `APN_CERTIFICATE_PASSPHRASE` environment variable if you use the encrypted option.
-
-## Creator
-
-Mattt Thompson ([@mattt](https://twitter.com/mattt))
 
 ## License
 
